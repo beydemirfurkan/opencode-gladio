@@ -56,6 +56,7 @@ function getConfigDir(): string {
 function getConfigPaths(configDir: string) {
   return {
     configDir,
+    skillsDir: join(configDir, "skills"),
     configJson: join(configDir, "opencode.json"),
     configJsonc: join(configDir, "opencode.jsonc"),
     packageJson: join(configDir, "package.json"),
@@ -456,6 +457,20 @@ function installSelfContainedMcps(vendorMcpDir: string, options?: { fresh?: bool
   }
 }
 
+function bundledSkillsSourceRoot(): string {
+  return join(packageRoot(), "vendor", "skills");
+}
+
+function installBundledSkills(skillsDir: string): void {
+  const sourceRoot = bundledSkillsSourceRoot();
+  if (!existsSync(sourceRoot)) {
+    return;
+  }
+
+  ensureDir(skillsDir);
+  copyDirectoryContents(sourceRoot, skillsDir);
+}
+
 function readExistingJinaApiKey(harnessConfigPath: string): string | undefined {
   const existingHarness = readJsonLike(harnessConfigPath);
   const harnessKey = normalizeJinaApiKey(
@@ -532,8 +547,8 @@ function ensureTuiConfig(configDir: string): void {
   });
 }
 
-function ensureSkillsDir(configDir: string): void {
-  ensureDir(join(configDir, "skills"));
+function ensureSkillsDir(skillsDir: string): void {
+  ensureDir(skillsDir);
 }
 
 async function runBunInstall(configDir: string): Promise<void> {
@@ -591,12 +606,13 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{ c
   ensureDir(configDir);
   ensureDir(join(configDir, "vendor"));
   ensureTuiConfig(configDir);
-  ensureSkillsDir(configDir);
+  ensureSkillsDir(paths.skillsDir);
 
   const jinaApiKey = await promptForJinaApiKey(readExistingJinaApiKey(paths.harnessConfig));
   await installShellStrategyInstruction(paths.shellStrategyDir);
   await installBackgroundAgentsVendor(paths.vendorDir);
   installSelfContainedMcps(paths.vendorMcpDir, { fresh: options?.fresh });
+  installBundledSkills(paths.skillsDir);
   const configPath = updateConfig(paths);
   const packageJsonPath = updatePackageJson(paths);
   writeHarnessConfig(paths.harnessConfig, jinaApiKey);
