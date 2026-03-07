@@ -1,4 +1,7 @@
-# opencode-pair-autonomy
+# oh-my-pair-code
+
+Repository name: `oh-my-pair-code`
+Package / CLI name: `opencode-pair-autonomy`
 
 A lean OpenCode harness plugin inspired by `oh-my-opencode`, but tuned for a simpler workflow:
 
@@ -18,7 +21,7 @@ This project is intentionally much smaller than `oh-my-opencode`. Phase 1 focuse
 Run directly from GitHub:
 
 ```bash
-bunx --bun github:Opencode-DCP/opencode-pair-autonomy install
+bunx --bun github:cemalturkcan/oh-my-pair-code install
 ```
 
 This stores the same GitHub package source in `~/.config/opencode/package.json`, so future reinstalls keep working without a local checkout.
@@ -26,8 +29,8 @@ This stores the same GitHub package source in `~/.config/opencode/package.json`,
 If you want to install from a fork or a different package source, override it explicitly:
 
 ```bash
-OPENCODE_PAIR_AUTONOMY_PACKAGE_SPEC=github:your-org/opencode-pair-autonomy \
-  bunx --bun github:your-org/opencode-pair-autonomy install
+OPENCODE_PAIR_AUTONOMY_PACKAGE_SPEC=github:your-org/oh-my-pair-code \
+  bunx --bun github:your-org/oh-my-pair-code install
 ```
 
 After the package is published to npm, the direct install becomes:
@@ -39,8 +42,8 @@ bunx --bun opencode-pair-autonomy install
 ## Install from a local checkout
 
 ```bash
-git clone https://github.com/Opencode-DCP/opencode-pair-autonomy.git
-cd opencode-pair-autonomy
+git clone https://github.com/cemalturkcan/oh-my-pair-code.git
+cd oh-my-pair-code
 bun install
 bun run build
 bun link
