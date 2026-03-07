@@ -1,0 +1,8 @@
+{
+  "basePaths": [
+    "~/.agents/skills",
+    "~/.config/opencode/skills",
+    ".opencode/skills",
+    "./vendor/skills"
+  ]
+}
