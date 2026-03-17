@@ -173,7 +173,10 @@ export function createHarnessMcps(
     const serverRoot = resolveMcpServerRoot("web-agent-mcp");
     result["web-agent-mcp"] = {
       type: "local",
-      command: localCommand(join(serverRoot, "dist", "src", "server.js")),
+      command: [
+        join(serverRoot, "node_modules", ".bin", "tsx"),
+        join(serverRoot, "src", "server.ts"),
+      ],
       enabled: true,
       timeout: 60000,
     };
@@ -199,19 +202,6 @@ export function createHarnessMcps(
       command: localCommand(join(serverRoot, "src", "index.js")),
       environment: {
         SSH_MCP_CONFIG_PATH: join(serverRoot, "config.json"),
-      },
-      enabled: true,
-      timeout: 60000,
-    };
-  }
-
-  if (toggles.sudo_mcp !== false) {
-    const serverRoot = resolveMcpServerRoot("sudo-mcp");
-    result["sudo-mcp"] = {
-      type: "local",
-      command: localCommand(join(serverRoot, "src", "index.js")),
-      environment: {
-        SUDO_MCP_CONFIG_PATH: join(serverRoot, "config.json"),
       },
       enabled: true,
       timeout: 60000,

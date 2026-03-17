@@ -50,7 +50,7 @@ const PACKAGE_SPECS: Record<string, string> = {
   zod: "latest",
 };
 
-const MCP_NAMES = ["pg-mcp", "ssh-mcp", "sudo-mcp"] as const;
+const MCP_NAMES = ["pg-mcp", "ssh-mcp", "web-agent-mcp"] as const;
 
 const BACKGROUND_AGENT_FILES = [
   "background-agents.ts",
@@ -674,6 +674,35 @@ function installSelfContainedMcps(
   }
 }
 
+async function installWebAgentMcpDeps(vendorMcpDir: string): Promise<void> {
+  const mcpDir = join(vendorMcpDir, "web-agent-mcp");
+  if (!existsSync(mcpDir)) {
+    return;
+  }
+  const nodeModules = join(mcpDir, "node_modules");
+  if (existsSync(nodeModules)) {
+    return;
+  }
+  await new Promise<void>((resolvePromise, rejectPromise) => {
+    const child = spawn("bun", ["install"], {
+      cwd: mcpDir,
+      stdio: "inherit",
+    });
+    child.on("error", rejectPromise);
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolvePromise();
+        return;
+      }
+      rejectPromise(
+        new Error(
+          `bun install for web-agent-mcp failed with exit code ${code ?? -1}`,
+        ),
+      );
+    });
+  });
+}
+
 function bundledSkillsSourceRoot(): string {
   return join(packageRoot(), "vendor", "skills");
 }
@@ -893,6 +922,13 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{
     );
   }
   installSelfContainedMcps(paths.vendorMcpDir, { fresh: options?.fresh });
+  try {
+    await installWebAgentMcpDeps(paths.vendorMcpDir);
+  } catch (error) {
+    console.warn(
+      `[opencode-pair-autonomy] Failed to install web-agent-mcp dependencies: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
   installBundledSkills(paths.skillsDir);
   const configPath = updateConfig(paths);
   const packageJsonPath = updatePackageJson(paths);
