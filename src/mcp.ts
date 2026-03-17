@@ -177,6 +177,13 @@ export function createHarnessMcps(
         join(serverRoot, "node_modules", ".bin", "tsx"),
         join(serverRoot, "src", "server.ts"),
       ],
+      environment: {
+        WEB_AGENT_CHROME_USER_DATA_DIR: join(
+          homedir(),
+          ".config",
+          "default-profile",
+        ),
+      },
       enabled: true,
       timeout: 60000,
     };
