@@ -53,6 +53,7 @@ type SessionManagerDeps = {
 
 export class SessionManager {
   private readonly sessions = new Map<string, ManagedSession>();
+  private readonly activeUserDataDirs = new Map<string, string>(); // userDataDir → sessionId
 
   constructor(private readonly deps: SessionManagerDeps) {}
 
@@ -78,6 +79,21 @@ export class SessionManager {
       ...(profileDirectory ? [`--profile-directory=${profileDirectory}`] : []),
     ];
     const viewport = input.viewport ?? this.deps.env.defaultViewport;
+
+    if (input.profileMode === "persistent" && userDataDir) {
+      const conflictingSessionId = this.activeUserDataDirs.get(userDataDir);
+      if (conflictingSessionId) {
+        const conflicting = this.sessions.get(conflictingSessionId);
+        if (conflicting && conflicting.status === "active") {
+          throw new WebAgentError(
+            "STATE_PAGE_NOT_FOUND",
+            `Profile directory "${userDataDir}" is already in use by session ${conflictingSessionId}. Close that session first with session.close, or create a new session without a profile to use ephemeral mode.`,
+            { userDataDir, conflictingSessionId },
+          );
+        }
+      }
+    }
+
     const adapterSession = await this.deps.adapter.createSession({
       sessionId,
       profileMode: input.profileMode,
@@ -115,6 +131,9 @@ export class SessionManager {
     };
 
     this.sessions.set(sessionId, session);
+    if (input.profileMode === "persistent" && userDataDir) {
+      this.activeUserDataDirs.set(userDataDir, sessionId);
+    }
     return session;
   }
 
@@ -197,6 +216,9 @@ export class SessionManager {
       viewport: session.viewport,
     };
     await this.deps.adapter.closeSession(session.adapterSession);
+    if (previous.userDataDir) {
+      this.activeUserDataDirs.delete(previous.userDataDir);
+    }
     const adapterSession = await this.deps.adapter.createSession({
       sessionId,
       profileMode: previous.profileMode,
@@ -223,6 +245,9 @@ export class SessionManager {
       adapterSession,
     };
     this.sessions.set(sessionId, restarted);
+    if (previous.profileMode === "persistent" && previous.userDataDir) {
+      this.activeUserDataDirs.set(previous.userDataDir, sessionId);
+    }
     return restarted;
   }
 
@@ -629,6 +654,9 @@ export class SessionManager {
     await this.deps.adapter.closeSession(session.adapterSession);
     session.status = "closed";
     this.sessions.set(sessionId, session);
+    if (session.userDataDir) {
+      this.activeUserDataDirs.delete(session.userDataDir);
+    }
     return session;
   }
 }
