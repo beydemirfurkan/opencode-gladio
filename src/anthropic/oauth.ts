@@ -21,6 +21,7 @@ const DEFAULT_SCOPES =
 const DEFAULT_BETA_HEADERS = [
   "claude-code-20250219",
   "interleaved-thinking-2025-05-14",
+  "context-1m-2025-08-07",
   "oauth-2025-04-20",
 ];
 
@@ -45,6 +46,7 @@ type OAuthTokens = { access: string; refresh: string; expires: number };
 const KNOWN_BETA_PREFIXES = [
   "claude-code-",
   "interleaved-thinking-",
+  "context-1m-",
   "context-management-",
   "oauth-",
 ];
