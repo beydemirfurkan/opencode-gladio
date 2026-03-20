@@ -4,12 +4,18 @@ import { createHarnessAgents } from "./agents";
 import { createHarnessMcps } from "./mcp";
 import { createHarnessCommands } from "./commands";
 import { createHarnessHooks } from "./hooks";
+import { createAnthropicOAuth } from "./anthropic/oauth";
 
 const PairAutonomyPlugin: Plugin = async (ctx) => {
   const harnessConfig = loadHarnessConfig(ctx.directory);
   const hooks = await createHarnessHooks(ctx, harnessConfig);
+  const oauth =
+    harnessConfig.hooks?.anthropic_oauth !== false
+      ? await createAnthropicOAuth()
+      : null;
 
   return {
+    // auth hook deliberately omitted — opencode-anthropic-auth handles OAuth+loader+Bearer
     config: async (config) => {
       const mutableConfig = config as unknown as Record<string, unknown>;
       const existingAgents = (mutableConfig.agent ?? {}) as Record<
@@ -52,7 +58,14 @@ const PairAutonomyPlugin: Plugin = async (ctx) => {
       await hooks.config?.(config);
     },
     ...(hooks["chat.message"] ? { "chat.message": hooks["chat.message"] } : {}),
-    ...(hooks["chat.headers"] ? { "chat.headers": hooks["chat.headers"] } : {}),
+    ...(hooks["chat.headers"] || oauth
+      ? {
+          "chat.headers": async (input: any, output: any) => {
+            await hooks["chat.headers"]?.(input, output);
+            await oauth?.chatHeaders(input, output);
+          },
+        }
+      : {}),
     ...(hooks.event ? { event: hooks.event } : {}),
     ...(hooks["tool.execute.before"]
       ? { "tool.execute.before": hooks["tool.execute.before"] }

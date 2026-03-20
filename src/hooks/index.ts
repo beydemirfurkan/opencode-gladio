@@ -12,7 +12,6 @@ import { safeCreateHook, safeHook } from "./sdk";
 import { createSessionEndHook } from "./session-end";
 import { createSessionStartHook } from "./session-start";
 import { createStopHook } from "./stop";
-import { createClaudeTokenSyncHook } from "./claude-token-sync";
 import { createTodoContinuationHook } from "./todo-continuation";
 
 type HookRecord = {
@@ -202,16 +201,6 @@ export async function createHarnessHooks(
     }
   };
 
-  if (config.hooks?.claude_token_sync !== false) {
-    const tokenSync = await createClaudeTokenSyncHook();
-    if (tokenSync) {
-      const hook = wrapHookRecord(
-        "claude_token_sync",
-        safeCreateHook("claude_token_sync", () => tokenSync),
-      );
-      if (hook) hooks.push(hook);
-    }
-  }
   registerHook("intent_gate", config.hooks?.intent_gate !== false, () =>
     createIntentGateHook(ctx),
   );

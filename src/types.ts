@@ -47,7 +47,7 @@ export type HarnessConfig = {
     flush_queued_prompts?: boolean;
     todo_continuation_cooldown_ms?: number;
     prompt_refiner?: boolean;
-    claude_token_sync?: boolean;
+    anthropic_oauth?: boolean;
   };
   memory?: {
     enabled?: boolean;
