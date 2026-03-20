@@ -37,13 +37,14 @@ function initProject(directory?: string): void {
 function printConfig(): void {
   console.log(`{
   "plugin": [
-    "file:///ABSOLUTE/PATH/TO/plugins/opencode-pair-autonomy.js",
-    "file:///ABSOLUTE/PATH/TO/plugins/opencode-dcp.js",
-    "file:///ABSOLUTE/PATH/TO/plugins/opencode-skillful.js",
-    "file:///ABSOLUTE/PATH/TO/plugins/opencode-notificator.js",
-    "file:///ABSOLUTE/PATH/TO/plugins/md-table-formatter.js",
-    "file:///ABSOLUTE/PATH/TO/plugins/opencode-pty.js",
-    "file:///ABSOLUTE/PATH/TO/opencode-background-agents-local"
+    "opencode-pair-autonomy@latest",
+    "@tarquinen/opencode-dcp@latest",
+    "@zenobius/opencode-skillful@latest",
+    "opencode-notificator@latest",
+    "@franlol/opencode-md-table-formatter@latest",
+    "opencode-pty@latest",
+    "opencode-anthropic-login-via-cli@latest",
+    "file://~/.config/opencode/vendor/opencode-background-agents-local"
   ],
   "instructions": [
     "~/.config/opencode/plugin/shell-strategy/shell_strategy.md"
@@ -58,7 +59,12 @@ export function main(argv: string[]): void {
   const [command, arg] = argv;
   const fresh = argv.includes("--fresh");
 
-  if (!command || command === "help" || command === "--help" || command === "-h") {
+  if (
+    !command ||
+    command === "help" ||
+    command === "--help" ||
+    command === "-h"
+  ) {
     printHelp();
     return;
   }
@@ -106,7 +112,9 @@ export function main(argv: string[]): void {
       .then((result) => {
         console.log(`Uninstalled harness wiring from ${result.configPath}`);
         console.log(`Updated package manifest ${result.packageJsonPath}`);
-        console.log(`Preserved user files: ${result.preservedPaths.join(", ")}`);
+        console.log(
+          `Preserved user files: ${result.preservedPaths.join(", ")}`,
+        );
       })
       .catch((error) => {
         console.error(error instanceof Error ? error.message : String(error));
@@ -126,7 +134,6 @@ function isDirectExecution(): boolean {
 
   return resolve(entryPath) === fileURLToPath(import.meta.url);
 }
-
 
 if (isDirectExecution()) {
   main(process.argv.slice(2));

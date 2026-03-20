@@ -19,13 +19,19 @@ import { SAMPLE_PROJECT_CONFIG } from "./config";
 
 type JsonRecord = Record<string, unknown>;
 
-const STATIC_PLUGIN_FILENAMES = [
-  "opencode-pair-autonomy.js",
-  "opencode-dcp.js",
-  "opencode-skillful.js",
-  "opencode-notificator.js",
-  "md-table-formatter.js",
-  "opencode-pty.js",
+/**
+ * npm package names used as plugin entries in opencode.json.
+ * Each entry is written as `"<package>@latest"` in the config.
+ * The vendor background-agents-local plugin stays as a `file://` entry.
+ */
+const MANAGED_PLUGIN_ENTRIES = [
+  "opencode-pair-autonomy",
+  "@tarquinen/opencode-dcp",
+  "@zenobius/opencode-skillful",
+  "opencode-notificator",
+  "@franlol/opencode-md-table-formatter",
+  "opencode-pty",
+  "opencode-anthropic-login-via-cli",
 ] as const;
 
 const MANAGED_PACKAGE_NAMES = [
@@ -35,6 +41,7 @@ const MANAGED_PACKAGE_NAMES = [
   "@zenobius/opencode-skillful",
   "@tarquinen/opencode-dcp",
   "@franlol/opencode-md-table-formatter",
+  "opencode-anthropic-login-via-cli",
 ] as const;
 
 const PACKAGE_SPECS: Record<string, string> = {
@@ -44,6 +51,7 @@ const PACKAGE_SPECS: Record<string, string> = {
   "@zenobius/opencode-skillful": "latest",
   "@tarquinen/opencode-dcp": "latest",
   "@franlol/opencode-md-table-formatter": "latest",
+  "opencode-anthropic-login-via-cli": "latest",
   "unique-names-generator": "latest",
   "@modelcontextprotocol/sdk": "latest",
   pg: "latest",
@@ -254,29 +262,25 @@ function resolveSelfPackageSpec(): string {
   return version || "latest";
 }
 
-function mergePluginList(
-  existing: unknown,
-  vendorDir: string,
-  pluginsDir: string,
-): string[] {
+function mergePluginList(existing: unknown, vendorDir: string): string[] {
   const backgroundEntry = `file://${vendorDir}`;
   const desired = [
-    ...STATIC_PLUGIN_FILENAMES.map(
-      (file) => `file://${join(pluginsDir, file)}`,
-    ),
+    ...MANAGED_PLUGIN_ENTRIES.map((pkg) => `${pkg}@latest`),
     backgroundEntry,
   ];
+  const desiredBareNames = new Set<string>(MANAGED_PLUGIN_ENTRIES);
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
   const retained = current.filter(
     (item) =>
       !desired.includes(item) &&
+      !desiredBareNames.has(item) &&
+      !desiredBareNames.has(item.replace(/@latest$/, "")) &&
       !item.includes("opencode-background-agents-local") &&
       !item.includes("plannotator") &&
-      item !== "opencode-shell-non-interactive-strategy" &&
-      item !== "opencode-pair-autonomy" &&
-      item !== "@tarquinen/opencode-dcp",
+      !item.startsWith("file://") &&
+      item !== "opencode-shell-non-interactive-strategy",
   );
   return [...desired, ...retained];
 }
@@ -298,20 +302,22 @@ function mergeInstructionsList(
 function removeHarnessPluginList(
   existing: unknown,
   vendorDir: string,
-  pluginsDir: string,
 ): string[] | undefined {
+  const managedBareNames = new Set<string>(MANAGED_PLUGIN_ENTRIES);
   const managedEntries = new Set([
-    ...STATIC_PLUGIN_FILENAMES.map(
-      (file) => `file://${join(pluginsDir, file)}`,
-    ),
+    ...MANAGED_PLUGIN_ENTRIES.map((pkg) => `${pkg}@latest`),
     `file://${vendorDir}`,
-    "opencode-pair-autonomy",
-    "@tarquinen/opencode-dcp",
   ]);
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
-  const retained = current.filter((item) => !managedEntries.has(item));
+  const retained = current.filter(
+    (item) =>
+      !managedEntries.has(item) &&
+      !managedBareNames.has(item) &&
+      !managedBareNames.has(item.replace(/@latest$/, "")) &&
+      !item.includes("opencode-background-agents-local"),
+  );
   return retained.length > 0 ? retained : undefined;
 }
 
@@ -611,44 +617,22 @@ async function installShellStrategyInstruction(
   writeFileSync(join(shellStrategyDir, "shell_strategy.md"), content, "utf8");
 }
 
-function installPluginWrappers(pluginsDir: string, configDir: string): void {
-  ensureDir(pluginsDir);
-  writeFileSync(
-    join(pluginsDir, "opencode-pair-autonomy.js"),
-    `import plugin from "file://${join(configDir, "node_modules", "opencode-pair-autonomy", "dist", "index.js")}";\nexport default plugin;\n`,
-    "utf8",
-  );
-  writeFileSync(
-    join(pluginsDir, "opencode-dcp.js"),
-    `import plugin from "file://${join(configDir, "node_modules", "@tarquinen", "opencode-dcp", "dist", "index.js")}";\nexport default plugin;\n`,
-    "utf8",
-  );
-  writeFileSync(
-    join(pluginsDir, "opencode-skillful.js"),
-    `import { SkillsPlugin } from "file://${join(configDir, "node_modules", "@zenobius", "opencode-skillful", "dist", "index.js")}";\nexport default SkillsPlugin;\n`,
-    "utf8",
-  );
-  writeFileSync(
-    join(pluginsDir, "opencode-notificator.js"),
-    `import { NotificationPlugin } from "file://${join(configDir, "node_modules", "opencode-notificator", "notificator.js")}";\nexport default NotificationPlugin;\n`,
-    "utf8",
-  );
-  writeFileSync(
-    join(pluginsDir, "md-table-formatter.js"),
-    `import { FormatTables } from "file://${join(configDir, "node_modules", "@franlol", "opencode-md-table-formatter", "index.ts")}";\nexport default FormatTables;\n`,
-    "utf8",
-  );
-  writeFileSync(
-    join(pluginsDir, "opencode-pty.js"),
-    `import { PTYPlugin } from "file://${join(configDir, "node_modules", "opencode-pty", "src", "plugin.ts")}";\nexport default PTYPlugin;\n`,
-    "utf8",
-  );
-}
+/** Legacy wrapper filenames to clean up from old installations. */
+const LEGACY_PLUGIN_WRAPPER_FILES = [
+  "opencode-pair-autonomy.js",
+  "opencode-dcp.js",
+  "opencode-skillful.js",
+  "opencode-notificator.js",
+  "md-table-formatter.js",
+  "opencode-pty.js",
+  "opencode-anthropic-login-via-cli.js",
+] as const;
 
-function removePluginWrappers(pluginsDir: string): void {
-  for (const filename of STATIC_PLUGIN_FILENAMES) {
+function cleanupLegacyPluginWrappers(pluginsDir: string): void {
+  for (const filename of LEGACY_PLUGIN_WRAPPER_FILES) {
     rmSync(join(pluginsDir, filename), { force: true });
   }
+  removeDirectoryIfEmpty(pluginsDir);
 }
 
 function copyDirectoryContents(
@@ -810,11 +794,7 @@ function updateConfig(paths: ReturnType<typeof getConfigPaths>): string {
   const config = readJsonLike(detected.path);
   backupFile(detected.path);
   config.$schema = config.$schema ?? "https://opencode.ai/config.json";
-  config.plugin = mergePluginList(
-    config.plugin,
-    paths.vendorDir,
-    paths.pluginsDir,
-  );
+  config.plugin = mergePluginList(config.plugin, paths.vendorDir);
   config.instructions = mergeInstructionsList(
     config.instructions,
     paths.shellStrategyDir,
@@ -980,8 +960,7 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{
   writeDcpConfig(paths.dcpConfig);
   await runBunInstall(configDir);
   await ensureInstalledHarnessBuild(configDir);
-  installPluginWrappers(paths.pluginsDir, configDir);
-
+  cleanupLegacyPluginWrappers(paths.pluginsDir);
 
   return {
     configPath,
@@ -1003,11 +982,7 @@ export async function uninstallHarness(): Promise<{
     const config = readJsonLike(detected.path);
     backupFile(detected.path);
 
-    const nextPlugin = removeHarnessPluginList(
-      config.plugin,
-      paths.vendorDir,
-      paths.pluginsDir,
-    );
+    const nextPlugin = removeHarnessPluginList(config.plugin, paths.vendorDir);
     if (nextPlugin) {
       config.plugin = nextPlugin;
     } else {
@@ -1050,14 +1025,12 @@ export async function uninstallHarness(): Promise<{
     }
   }
 
-
-  removePluginWrappers(paths.pluginsDir);
+  cleanupLegacyPluginWrappers(paths.pluginsDir);
   rmSync(join(paths.binDir, "fff-mcp"), { force: true });
   rmSync(join(paths.binDir, "fff-mcp.exe"), { force: true });
   rmSync(paths.vendorDir, { recursive: true, force: true });
   rmSync(join(paths.shellStrategyDir, "shell_strategy.md"), { force: true });
 
-  removeDirectoryIfEmpty(paths.pluginsDir);
   removeDirectoryIfEmpty(paths.binDir);
   removeDirectoryIfEmpty(paths.shellStrategyDir);
   removeDirectoryIfEmpty(join(configDir, "plugin"));

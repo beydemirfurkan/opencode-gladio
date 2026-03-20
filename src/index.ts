@@ -4,28 +4,12 @@ import { createHarnessAgents } from "./agents";
 import { createHarnessMcps } from "./mcp";
 import { createHarnessCommands } from "./commands";
 import { createHarnessHooks } from "./hooks";
-import { createAnthropicOAuth } from "./anthropic/oauth";
 
 const PairAutonomyPlugin: Plugin = async (ctx) => {
   const harnessConfig = loadHarnessConfig(ctx.directory);
   const hooks = await createHarnessHooks(ctx, harnessConfig);
-  const oauth =
-    harnessConfig.hooks?.anthropic_oauth !== false
-      ? await createAnthropicOAuth(ctx.client)
-      : null;
 
   return {
-    ...(oauth ? { auth: oauth.auth } : {}),
-    ...(oauth
-      ? {
-          "experimental.chat.system.transform": async (
-            input: any,
-            output: any,
-          ) => {
-            oauth.systemTransform(input, output);
-          },
-        }
-      : {}),
     ...(hooks["experimental.chat.messages.transform"]
       ? {
           "experimental.chat.messages.transform":
