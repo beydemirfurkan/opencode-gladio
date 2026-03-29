@@ -39,14 +39,14 @@ const MANAGED_PLUGIN_ENTRIES = [
   "@zenobius/opencode-skillful",
   "@franlol/opencode-md-table-formatter",
   "opencode-pty",
-  "opencode-notificator",
+  "@mohak34/opencode-notifier",
   "opencode-anthropic-login-via-cli",
 ] as const;
 
 const MANAGED_PACKAGE_NAMES = [
   "opencode-pair-autonomy",
   "opencode-pty",
-  "opencode-notificator",
+  "@mohak34/opencode-notifier",
   "@zenobius/opencode-skillful",
   "@tarquinen/opencode-dcp",
   "@franlol/opencode-md-table-formatter",
@@ -55,8 +55,7 @@ const MANAGED_PACKAGE_NAMES = [
 
 const PACKAGE_SPECS: Record<string, string> = {
   "opencode-pty": "latest",
-  "opencode-notificator":
-    "git+https://github.com/panta82/opencode-notificator.git",
+  "@mohak34/opencode-notifier": "latest",
   "@zenobius/opencode-skillful": "latest",
   "@tarquinen/opencode-dcp": "latest",
   "@franlol/opencode-md-table-formatter": "latest",
@@ -103,6 +102,7 @@ function getConfigPaths(configDir: string) {
     vendorDir: join(configDir, "vendor", "opencode-background-agents-local"),
     vendorMcpDir: join(configDir, "vendor", "mcp"),
     shellStrategyDir: join(configDir, "plugin", "shell-strategy"),
+    notifierConfig: join(configDir, "opencode-notifier.json"),
   };
 }
 
@@ -592,6 +592,36 @@ function writeDcpConfig(filePath: string): void {
   writeJson(filePath, merged);
 }
 
+const DEFAULT_NOTIFIER_CONFIG: JsonRecord = {
+  sound: true,
+  notification: true,
+  timeout: 3,
+  suppressWhenFocused: false,
+  sounds: {
+    permission: "/usr/share/sounds/freedesktop/stereo/message.oga",
+    complete: "/usr/share/sounds/freedesktop/stereo/message.oga",
+    subagent_complete: "/usr/share/sounds/freedesktop/stereo/message.oga",
+    error: "/usr/share/sounds/freedesktop/stereo/message.oga",
+    question: "/usr/share/sounds/freedesktop/stereo/message.oga",
+    user_cancelled: "/usr/share/sounds/freedesktop/stereo/message.oga",
+  },
+  volumes: {
+    permission: 0.35,
+    complete: 0.35,
+    subagent_complete: 0.25,
+    error: 0.45,
+    question: 0.35,
+    user_cancelled: 0.2,
+  },
+};
+
+function writeNotifierConfig(filePath: string): void {
+  if (existsSync(filePath)) {
+    return;
+  }
+  writeJson(filePath, DEFAULT_NOTIFIER_CONFIG);
+}
+
 async function fetchText(url: string): Promise<string> {
   const response = await fetch(url);
   if (!response.ok) {
@@ -1006,6 +1036,7 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{
     figmaConsoleSshHost,
   );
   writeDcpConfig(paths.dcpConfig);
+  writeNotifierConfig(paths.notifierConfig);
   await runBunInstall(configDir);
   await ensureInstalledHarnessBuild(configDir);
   try {
