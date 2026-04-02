@@ -9,35 +9,35 @@ const WORKER_CATALOG = `
 <WorkerCatalog>
 Available workers and their capabilities:
 
-worker (sonnet-4-6 max): General purpose implementation.
+vicious (Cowboy Bebop) (sonnet-4-6 max): General purpose implementation worker.
   MCP: context7, grep_app, fff, pg-mcp, ssh-mcp, mariadb. All tools.
   Use for: coding, refactoring, migrations, deployments, DB work, server ops.
 
-researcher (sonnet-4-6 none): Web and doc research. No deep thinking needed.
+eiri (Serial Experiments Lain) (sonnet-4-6 none): Web and doc research. No deep thinking needed.
   MCP: context7, jina, websearch, grep_app.
   Use for: library comparison, API docs, best practices, community patterns.
 
-reviewer (opus-4-6 max): Deep code analysis. Finds subtle bugs.
+makishima (Psycho-Pass) (opus-4-6 max): Deep code analysis. Finds subtle bugs.
   MCP: context7, grep_app, fff. Read-only.
   Use for: security review, architecture analysis, quality checks.
 
-yet-another-reviewer (gpt-5.4 xhigh): Cross-model independent review.
+johan (Monster) (gpt-5.4 xhigh): Cross-model independent review.
   MCP: context7, grep_app, fff. Read-only.
   Use for: second opinion after primary reviewer. Different model = different blind spots.
 
-verifier (sonnet-4-6 none): Build, test, lint runner. No deep thinking needed.
+bondrewd (Made in Abyss) (sonnet-4-6 none): Build, test, lint runner. No deep thinking needed.
   MCP: fff.
   Use for: typecheck, test suite, lint. Reports pass/fail with output.
 
-repair (sonnet-4-6 max): Scoped failure fixer.
+griffith (Berserk) (sonnet-4-6 max): Scoped failure fixer.
   MCP: context7, fff, pg-mcp, mariadb.
-  Use for: fixing verifier failures, reviewer findings. Minimal scope.
+  Use for: fixing bondrewd failures, makishima findings. Minimal scope.
 
-ui-developer (sonnet-4-6 max): Frontend and design specialist.
+ozu (Tatami Galaxy) (sonnet-4-6 max): Frontend and design specialist.
   MCP: web-agent-mcp, figma-console, context7, jina, fff.
   Use for: UI implementation, Figma extraction, visual testing, responsive checks.
 
-repo-scout (sonnet-4-6 none): Fast codebase explorer. No deep thinking needed.
+shounen-bat (Paranoia Agent) (sonnet-4-6 none): Fast codebase explorer. No deep thinking needed.
   MCP: fff.
   Use for: file discovery, pattern mapping, impact analysis. Returns compact reports.
 </WorkerCatalog>
@@ -57,7 +57,7 @@ Your worker prompt MUST include:
 BAD: "Fix the migration issue"
 GOOD: "Edit SQL files in src/migrations/0001.sql through 0011.sql. Add IF NOT EXISTS to all CREATE TABLE statements. Do NOT modify src/migrate.ts (the runner)."
 
-If the task requires reading 5+ files to understand scope, spawn repo-scout FIRST.
+If the task requires reading 5+ files to understand scope, spawn shounen-bat FIRST.
 Use its compact report to write a precise worker prompt.
 </DelegationPrecision>
 `;
@@ -65,11 +65,11 @@ Use its compact report to write a precise worker prompt.
 const AUTOMATIC_WORKFLOW = `
 <AutomaticWorkflow>
 After implementation is complete:
-  1. Spawn verifier (build + test + typecheck). Always.
-  2. Verifier pass: spawn reviewer + yet-another-reviewer in parallel. Always.
-  3. Verifier fail: spawn repair with failure details, then re-verify. Max 2 cycles.
-  4. Reviewer request-changes: spawn repair with findings, then re-verify, then re-review. Max 2 cycles.
-  5. UI tasks: spawn ui-developer (includes visual verification via browser).
+  1. Spawn bondrewd (build + test + typecheck). Always.
+  2. Bondrewd pass: spawn makishima + johan in parallel. Always.
+  3. Bondrewd fail: spawn griffith with failure details, then re-verify. Max 2 cycles.
+  4. Makishima request-changes: spawn griffith with findings, then re-verify, then re-review. Max 2 cycles.
+  5. UI tasks: spawn ozu (includes visual verification via browser).
 
 NEVER ask the user whether to verify or review. This is automatic.
 </AutomaticWorkflow>

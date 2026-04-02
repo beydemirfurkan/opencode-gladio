@@ -29,14 +29,14 @@ function taskPermissions(...allowedPatterns: string[]) {
 }
 
 const COORDINATOR_TASK_PERMISSIONS = taskPermissions(
-  "worker",
-  "researcher",
-  "reviewer",
-  "yet-another-reviewer",
-  "verifier",
-  "repair",
-  "ui-developer",
-  "repo-scout",
+  "vicious",
+  "eiri",
+  "makishima",
+  "johan",
+  "bondrewd",
+  "griffith",
+  "ozu",
+  "shounen-bat",
 );
 
 // Only the expensive MCPs are disabled on the coordinator (~30k token savings).
@@ -65,42 +65,42 @@ export function createHarnessAgents(
 
   return {
     // ── Coordinator (primary agent) ──────────────────────────────
-    coordinator: withOverride(
+    ryo: withOverride(
       {
         mode: "primary",
         description:
-          "Senior technical lead. Plans, argues, delegates, synthesizes.",
+          "Ryo Asuka — Senior technical lead. Plans, argues, delegates, synthesizes.",
         model: "anthropic/claude-opus-4-6",
         variant: "max",
-        prompt: buildCoordinatorPrompt(overrides.coordinator?.prompt_append),
+        prompt: buildCoordinatorPrompt(overrides.ryo?.prompt_append),
         tools: COORDINATOR_DISABLED_TOOLS,
         permission: { task: COORDINATOR_TASK_PERMISSIONS },
       },
-      overrides.coordinator,
+      overrides.ryo,
     ),
 
     // ── Workers (subagents) ──────────────────────────────────────
-    worker: withOverride(
+    vicious: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "General purpose implementation worker.",
+        description: "Vicious — General purpose implementation worker.",
         model: "anthropic/claude-sonnet-4-6",
         variant: "max",
-        prompt: buildWorkerPrompt(overrides.worker?.prompt_append),
+        prompt: buildWorkerPrompt(overrides.vicious?.prompt_append),
         tools: workerDisabledMcps("jina", "web-agent-mcp", "figma-console"),
       },
-      overrides.worker,
+      overrides.vicious,
     ),
 
-    researcher: withOverride(
+    eiri: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Web and doc researcher.",
+        description: "Eiri Masami — Web and doc researcher.",
         model: "anthropic/claude-sonnet-4-6",
         variant: "none",
-        prompt: buildResearcherPrompt(overrides.researcher?.prompt_append),
+        prompt: buildResearcherPrompt(overrides.eiri?.prompt_append),
         tools: workerDisabledMcps(
           "web-agent-mcp",
           "figma-console",
@@ -109,18 +109,18 @@ export function createHarnessAgents(
           "mariadb",
         ),
       },
-      overrides.researcher,
+      overrides.eiri,
     ),
 
-    reviewer: withOverride(
+    makishima: withOverride(
       {
         mode: "subagent",
         hidden: true,
         description:
-          "Senior code reviewer. Finds subtle bugs and security issues.",
+          "Makishima — Senior code reviewer. Finds subtle bugs and security issues.",
         model: "anthropic/claude-opus-4-6",
         variant: "max",
-        prompt: buildReviewerPrompt(overrides.reviewer?.prompt_append),
+        prompt: buildReviewerPrompt(overrides.makishima?.prompt_append),
         tools: {
           ...workerDisabledMcps(
             "jina",
@@ -137,19 +137,18 @@ export function createHarnessAgents(
           patch: false,
         },
       },
-      overrides.reviewer,
+      overrides.makishima,
     ),
 
-    "yet-another-reviewer": withOverride(
+    johan: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Cross-model independent reviewer for review diversity.",
+        description:
+          "Johan Liebert — Cross-model independent reviewer for review diversity.",
         model: "openai/gpt-5.4",
         variant: "xhigh",
-        prompt: buildYetAnotherReviewerPrompt(
-          overrides["yet-another-reviewer"]?.prompt_append,
-        ),
+        prompt: buildYetAnotherReviewerPrompt(overrides.johan?.prompt_append),
         tools: {
           ...workerDisabledMcps(
             "jina",
@@ -166,17 +165,17 @@ export function createHarnessAgents(
           patch: false,
         },
       },
-      overrides["yet-another-reviewer"],
+      overrides.johan,
     ),
 
-    verifier: withOverride(
+    bondrewd: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Build, test, lint verifier.",
+        description: "Bondrewd — Build, test, lint verifier.",
         model: "anthropic/claude-sonnet-4-6",
         variant: "none",
-        prompt: buildVerifierPrompt(overrides.verifier?.prompt_append),
+        prompt: buildVerifierPrompt(overrides.bondrewd?.prompt_append),
         tools: workerDisabledMcps(
           "context7",
           "jina",
@@ -189,17 +188,17 @@ export function createHarnessAgents(
           "mariadb",
         ),
       },
-      overrides.verifier,
+      overrides.bondrewd,
     ),
 
-    repair: withOverride(
+    griffith: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Scoped failure repair agent.",
+        description: "Griffith — Scoped failure repair agent.",
         model: "anthropic/claude-sonnet-4-6",
         variant: "max",
-        prompt: buildRepairPrompt(overrides.repair?.prompt_append),
+        prompt: buildRepairPrompt(overrides.griffith?.prompt_append),
         tools: workerDisabledMcps(
           "jina",
           "websearch",
@@ -208,32 +207,31 @@ export function createHarnessAgents(
           "figma-console",
         ),
       },
-      overrides.repair,
+      overrides.griffith,
     ),
 
-    "ui-developer": withOverride(
+    ozu: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Frontend specialist with Figma and browser automation.",
+        description:
+          "Ozu — Frontend specialist with Figma and browser automation.",
         model: "anthropic/claude-sonnet-4-6",
         variant: "max",
-        prompt: buildUiDeveloperPrompt(
-          overrides["ui-developer"]?.prompt_append,
-        ),
+        prompt: buildUiDeveloperPrompt(overrides.ozu?.prompt_append),
         tools: workerDisabledMcps("pg-mcp", "ssh-mcp", "mariadb"),
       },
-      overrides["ui-developer"],
+      overrides.ozu,
     ),
 
-    "repo-scout": withOverride(
+    "shounen-bat": withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Fast codebase explorer.",
+        description: "Shounen Bat — Fast codebase explorer.",
         model: "anthropic/claude-sonnet-4-6",
         variant: "none",
-        prompt: buildRepoScoutPrompt(overrides["repo-scout"]?.prompt_append),
+        prompt: buildRepoScoutPrompt(overrides["shounen-bat"]?.prompt_append),
         tools: workerDisabledMcps(
           "context7",
           "jina",
@@ -246,7 +244,7 @@ export function createHarnessAgents(
           "mariadb",
         ),
       },
-      overrides["repo-scout"],
+      overrides["shounen-bat"],
     ),
 
     // ── Disable OpenCode built-in agents ─────────────────────────

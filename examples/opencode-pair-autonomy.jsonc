@@ -1,5 +1,5 @@
 {
-  "default_mode": "pair",
+  "default_mode": "coordinator",
   "set_default_agent": true,
   "hooks": {
     "intent_gate": false,
@@ -19,25 +19,16 @@
     "jina": true
   },
   "agents": {
-    "pair": {
+    "ryo": {
       "variant": "high"
     },
-    "autonomous": {
-      "variant": "high"
-    },
-    "repo-scout-fast": {
+    "shounen-bat": {
       "model": "kimi-for-coding/k2p5"
     },
-    "repo-scout-deep": {
-      "model": "kimi-for-coding/kimi-k2-thinking"
-    },
-    "researcher-fast": {
+    "eiri": {
       "model": "kimi-for-coding/k2p5"
     },
-    "researcher-deep": {
-      "model": "kimi-for-coding/kimi-k2-thinking"
-    },
-    "verifier-fast": {
+    "bondrewd": {
       "model": "kimi-for-coding/k2p5"
     }
   }

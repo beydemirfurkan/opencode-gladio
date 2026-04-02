@@ -3,14 +3,14 @@ export type HarnessMode = "coordinator";
 export type PlanModeState = "planning" | "executing";
 
 export type WorkerType =
-  | "worker"
-  | "researcher"
-  | "reviewer"
-  | "yet-another-reviewer"
-  | "verifier"
-  | "repair"
-  | "ui-developer"
-  | "repo-scout";
+  | "vicious"
+  | "eiri"
+  | "makishima"
+  | "johan"
+  | "bondrewd"
+  | "griffith"
+  | "ozu"
+  | "shounen-bat";
 
 export type HookProfile = "minimal" | "standard" | "strict";
 

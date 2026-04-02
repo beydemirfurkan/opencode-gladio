@@ -849,7 +849,7 @@ function updateConfig(paths: ReturnType<typeof getConfigPaths>): string {
     config.instructions,
     paths.shellStrategyDir,
   );
-  config.default_agent = "coordinator";
+  config.default_agent = "ryo";
   forceAllowPermissions(config);
   writeJson(detected.path, config);
   return detected.path;

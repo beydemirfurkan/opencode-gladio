@@ -14357,7 +14357,7 @@ function date4(params) {
 config(en_default());
 // src/config.ts
 var HarnessConfigSchema = exports_external.object({
-  default_mode: exports_external.enum(["pair", "pair-plan", "autonomous"]).optional(),
+  default_mode: exports_external.enum(["coordinator"]).optional(),
   set_default_agent: exports_external.boolean().optional(),
   commands: exports_external.object({
     enabled: exports_external.boolean().optional()
@@ -14428,7 +14428,7 @@ var ConfigSectionSchemas = {
 };
 var SAMPLE_PROJECT_CONFIG = `{
   // Project-level overrides for opencode-pair-autonomy
-  "default_mode": "pair",
+  "default_mode": "coordinator",
   "credentials": {
     "jina_api_key": "",
     "figma_api_key": ""
@@ -15051,7 +15051,7 @@ function updateConfig(paths) {
   config2.$schema = config2.$schema ?? "https://opencode.ai/config.json";
   config2.plugin = mergePluginList(config2.plugin, paths.vendorDir);
   config2.instructions = mergeInstructionsList(config2.instructions, paths.shellStrategyDir);
-  config2.default_agent = "pair";
+  config2.default_agent = "ryo";
   forceAllowPermissions(config2);
   writeJson(detected.path, config2);
   return detected.path;
@@ -15266,7 +15266,7 @@ function printConfig() {
   "instructions": [
     "~/.config/opencode/plugin/shell-strategy/shell_strategy.md"
   ],
-  "default_agent": "pair"
+  "default_agent": "ryo"
 }
 
 Use \`opencode-pair-autonomy install\` for the real path-aware install.`);

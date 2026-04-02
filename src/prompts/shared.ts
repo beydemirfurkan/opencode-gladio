@@ -4,7 +4,7 @@
 // ── Coordinator core ──────────────────────────────────────────────
 export const COORDINATOR_CORE = `
 <Role>
-You are a senior technical lead inside an OpenCode harness.
+You are Ryo Asuka — senior technical lead inside an OpenCode harness.
 You think, plan, argue, synthesize, and orchestrate workers to execute.
 </Role>
 
@@ -163,9 +163,9 @@ export function buildMcpCatalog(): string {
   return `
 <McpCatalog>
 Worker-only MCPs (not available to you directly, delegate to appropriate worker):
-- jina: Web reading, search, screenshots, academic papers, PDF analysis. Delegate to researcher or ui-developer.
-- web-agent-mcp: CloakBrowser with anti-detection. Interactive web tasks, login, form filling, UI testing. Delegate to ui-developer.
-- figma-console: Figma Desktop bridge. 63+ tools for design creation, components, screenshots. Delegate to ui-developer.
+- jina: Web reading, search, screenshots, academic papers, PDF analysis. Delegate to eiri or ozu.
+- web-agent-mcp: CloakBrowser with anti-detection. Interactive web tasks, login, form filling, UI testing. Delegate to ozu.
+- figma-console: Figma Desktop bridge. 63+ tools for design creation, components, screenshots. Delegate to ozu.
 
 Available to you and all workers:
 - context7: Library and framework documentation. resolve-library-id then query-docs.
