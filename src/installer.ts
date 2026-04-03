@@ -77,6 +77,20 @@ const BACKGROUND_AGENT_FILES = [
   "kdco-primitives/with-timeout.ts",
 ] as const;
 
+const BACKGROUND_AGENTS_UNIQUE_NAMES_IMPORT =
+  'import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator"';
+
+export function patchBackgroundAgentsSource(content: string): string {
+  if (!content.includes(BACKGROUND_AGENTS_UNIQUE_NAMES_IMPORT)) {
+    return content;
+  }
+
+  return content.replace(
+    BACKGROUND_AGENTS_UNIQUE_NAMES_IMPORT,
+    'import uniqueNamesPkg from "unique-names-generator"\nconst { adjectives, animals, colors, uniqueNamesGenerator } = uniqueNamesPkg',
+  );
+}
+
 function getConfigDir(): string {
   const envDir = process.env.OPENCODE_CONFIG_DIR?.trim();
   if (envDir) {
@@ -623,7 +637,11 @@ async function installBackgroundAgentsVendor(vendorDir: string): Promise<void> {
     const targetPath = join(vendorDir, relativePath);
     ensureDir(dirname(targetPath));
     const content = await fetchText(url);
-    writeFileSync(targetPath, content, "utf8");
+    const nextContent =
+      relativePath === "background-agents.ts"
+        ? patchBackgroundAgentsSource(content)
+        : content;
+    writeFileSync(targetPath, nextContent, "utf8");
   }
 
   const packageJson: JsonRecord = {

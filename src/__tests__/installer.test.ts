@@ -3,6 +3,7 @@ import {
   applySafePermissionNormalization,
   ensureDefaultAgent,
   mergePluginList,
+  patchBackgroundAgentsSource,
   removeHarnessPluginList,
 } from "../installer";
 
@@ -80,5 +81,26 @@ describe("applySafePermissionNormalization", () => {
 
     expect(config.permission).toBe("deny");
     expect(config.ruleset).toBeUndefined();
+  });
+});
+
+describe("patchBackgroundAgentsSource", () => {
+  it("rewrites unique-names-generator import to a Bun-safe default import", () => {
+    const source = [
+      'import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator"',
+      "const id = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] });",
+    ].join("\n");
+
+    const result = patchBackgroundAgentsSource(source);
+
+    expect(result).toContain(
+      'import uniqueNamesPkg from "unique-names-generator"',
+    );
+    expect(result).toContain(
+      "const { adjectives, animals, colors, uniqueNamesGenerator } = uniqueNamesPkg",
+    );
+    expect(result).not.toContain(
+      'import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator"',
+    );
   });
 });
