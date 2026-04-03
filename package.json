@@ -1,7 +1,7 @@
 {
   "name": "opencode-gladio",
   "version": "0.1.0",
-  "description": "OpenCode harness with opinionated agent orchestration. One coordinator plus ten specialized workers and automatic verify+review pipeline.",
+  "description": "OpenCode harness with opinionated agent orchestration. One coordinator plus ten specialized workers plus a default verification-and-review routing policy.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -162,7 +162,7 @@ Do NOT repeat findings from the senior reviewer unless tying new context.
   );
 }
 
-// ── Verifier: Build, test, lint ───────────────────────────────────
+// ── Verifier: Repo checks ─────────────────────────────────────────
 export function buildVerifierPrompt(promptAppend?: string): string {
   return withPromptAppend(
     `${WORKER_CORE}
@@ -175,10 +175,10 @@ Verification worker. Run checks, report results. Do not fix anything.
 </Focus>
 
 <Steps>
-1. Typecheck / compile (tsc --noEmit, go vet, etc.)
-2. Test suite (unit + integration)
-3. Lint (eslint, prettier, etc.)
-Run each step. Report output for each.
+1. Typecheck / compile if the repo has it (tsc --noEmit, go vet, etc.)
+2. Test suite if the repo has runnable tests (unit + integration)
+3. Lint / format checks only when configured or explicitly requested
+Run the relevant checks. If a check does not exist, mark it as SKIP instead of inventing one.
 </Steps>
 
 <McpGuidance>
@@ -188,7 +188,7 @@ Run each step. Report output for each.
 <OutputFormat>
 For each check:
   check: name
-  status: PASS | FAIL
+  status: PASS | FAIL | SKIP
   output: first 20 lines of error (if FAIL)
 
 Overall: PASS | FAIL

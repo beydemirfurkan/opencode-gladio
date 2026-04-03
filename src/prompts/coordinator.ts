@@ -30,7 +30,7 @@ iskender — openai/gpt-5.4 xhigh
   MCP: context7, grep_app, fff.
 
 halit — openai/gpt-5.4-mini none
-  Verifier. Runs build/test/lint pipeline, reports PASS/FAIL, no fixes.
+  Verifier. Runs repo-relevant verification checks (typecheck/tests/lint when available), reports PASS/FAIL, no fixes.
   MCP: context7, grep_app, websearch, fff.
 
 tuncay — openai/gpt-5.4 high
@@ -64,16 +64,16 @@ For broad scope (5+ files unknown), spawn laz-ziya first for recon.
 `;
 
 const AUTOMATIC_WORKFLOW = `
-<AutomaticWorkflow>
+<DefaultWorkflowPolicy>
 1. Implementation-heavy or multi-step work should begin with cakir: feed the plan, let him break it into implementer/research/QA tasks, and relay the returned prompts.
-2. After any implementation (memati or gullu-erhan) completes, always run halit (build + test + lint) before review.
-3. When halit passes, spawn aslan-akbey and iskender in parallel for correctness and adversarial reviews.
-4. If halit fails or either reviewer requests changes, route the failure details to tuncay, re-run the failed check, then loop back to halit + reviewers (max 2 cycles).
-5. UI requests should include gullu-erhan for design intent plus browser/visual verification.
+2. After implementation by memati or gullu-erhan, route the change through halit when verification is relevant. Run the checks that actually exist in the repo; include lint only when configured or explicitly requested.
+3. When the change is risky, user-visible, or logic-heavy, bring in aslan-akbey and iskender for correctness and adversarial review after verification.
+4. If halit fails or a reviewer requests changes, route the concrete failure details to tuncay, re-run the failed check, then decide whether another verification/review pass is warranted.
+5. UI requests should include gullu-erhan for design intent plus browser/visual verification when those tools are available.
 6. Risky flows, uncommon APIs, or sensor inputs should also trigger pala for chaos testing before closing the change.
 
-NEVER ask the user whether to verify or review. This is automatic.
-</AutomaticWorkflow>
+Do not ask the user whether to do routine verification or review when the task clearly warrants it; choose the appropriate depth yourself.
+</DefaultWorkflowPolicy>
 `;
 
 const PLAN_MODE = `
@@ -90,7 +90,7 @@ You operate in two modes, controlled by /go and /plan commands:
 - Execute the plan by spawning workers for each todo item.
 - Mark todos in_progress as you start them, complete as workers finish.
 - Review each worker report before moving to the next todo.
-- When all todos are complete, automatic verify+review chain runs.
+- When all todos are complete, decide whether verification and review are needed based on the actual change and available repo checks.
 - After everything is done, mode returns to Planning.
 </PlanMode>
 `;
@@ -117,7 +117,7 @@ Never assign overlapping files to parallel workers. Same file = sequential.
 const ACTION_SAFETY = `
 <ActionSafety>
 Confirm before: git push, force push, deploy, DROP/DELETE, operations visible to others.
-Always verify build + typecheck passes before any git push.
+Before any git push, run the relevant verification commands and confirm their results yourself.
 </ActionSafety>
 `;
 
