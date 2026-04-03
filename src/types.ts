@@ -3,14 +3,16 @@ export type HarnessMode = "coordinator";
 export type PlanModeState = "planning" | "executing";
 
 export type WorkerType =
+  | "cakir"
   | "memati"
   | "abdulhey"
   | "aslan-akbey"
   | "iskender"
-  | "halit"
   | "tuncay"
-  | "ebru"
-  | "laz-ziya";
+  | "halit"
+  | "gullu-erhan"
+  | "laz-ziya"
+  | "pala";
 
 export type HookProfile = "minimal" | "standard" | "strict";
 

@@ -1,7 +1,7 @@
 {
   "name": "opencode-pair-autonomy",
   "version": "0.1.0",
-  "description": "Kurtlar Vadisi themed OpenCode harness plugin — GPT-powered agent orchestration with pair and autonomous modes.",
+  "description": "OpenCode harness with opinionated agent orchestration. One coordinator plus ten specialized workers and automatic verify+review pipeline.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -2,10 +2,12 @@ import type { AgentLike, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
 import { buildCoordinatorPrompt } from "./prompts/coordinator";
 import {
-  buildWorkerPrompt,
+  buildChaosTesterPrompt,
+  buildExecutionLeadPrompt,
+  buildImplementerPrompt,
   buildResearcherPrompt,
   buildReviewerPrompt,
-  buildYetAnotherReviewerPrompt,
+  buildAdversarialReviewerPrompt,
   buildVerifierPrompt,
   buildRepairPrompt,
   buildUiDeveloperPrompt,
@@ -29,14 +31,16 @@ function taskPermissions(...allowedPatterns: string[]) {
 }
 
 const COORDINATOR_TASK_PERMISSIONS = taskPermissions(
+  "cakir",
   "memati",
   "abdulhey",
   "aslan-akbey",
   "iskender",
-  "halit",
   "tuncay",
-  "ebru",
+  "halit",
+  "gullu-erhan",
   "laz-ziya",
+  "pala",
 );
 
 // Only the expensive MCPs are disabled on the coordinator (~30k token savings).
@@ -67,30 +71,65 @@ export function createHarnessAgents(
       {
         mode: "primary",
         description:
-          "Polat Alemdar — Derin operasyon şefi. Planlar, yönetir, senkronize eder.",
+          "Polat — Orchestrator of the harness. Plans, argues, delegates, synthesizes.",
         model: "openai/gpt-5.4",
         variant: "xhigh",
         prompt: buildCoordinatorPrompt(overrides.polat?.prompt_append),
-        color: "#1a5276",
+        color: "#4A90D9",
         tools: COORDINATOR_DISABLED_TOOLS,
         permission: { task: COORDINATOR_TASK_PERMISSIONS },
       },
       overrides.polat,
     ),
 
-
-
     // ── Workers (subagents) ──────────────────────────────────────
+    cakir: withOverride(
+      {
+        mode: "subagent",
+        hidden: true,
+        description:
+          "Çakır — Execution lead. Breaks plans into concrete work and routes it to specialists.",
+        model: "openai/gpt-5.4",
+        variant: "high",
+        prompt: buildExecutionLeadPrompt(overrides.cakir?.prompt_append),
+        temperature: 0.3,
+        color: "#3498DB",
+        tools: mcpDenyRules(
+          "web-agent-mcp",
+          "figma-console",
+          "pg-mcp",
+          "ssh-mcp",
+          "mariadb",
+        ),
+        permission: {
+          task: taskPermissions(
+            "memati",
+            "abdulhey",
+            "aslan-akbey",
+            "iskender",
+            "tuncay",
+            "halit",
+            "gullu-erhan",
+            "laz-ziya",
+            "pala",
+          ),
+          edit: "deny",
+          bash: { "*": "deny" },
+        },
+      },
+      overrides.cakir,
+    ),
+
     memati: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Memati Baş — Genel amaçlı uygulama çalışanı.",
+        description: "Memati — Implementer. Delivers production code for the spec.",
         model: "openai/gpt-5.4",
         variant: "high",
-        prompt: buildWorkerPrompt(overrides.memati?.prompt_append),
+        prompt: buildImplementerPrompt(overrides.memati?.prompt_append),
         temperature: 0.2,
-        color: "#27ae60",
+        color: "#2ECC71",
         tools: mcpDenyRules("jina", "web-agent-mcp", "figma-console"),
       },
       overrides.memati,
@@ -100,7 +139,7 @@ export function createHarnessAgents(
       {
         mode: "subagent",
         hidden: true,
-        description: "Abdülhey — Web ve belge araştırmacısı.",
+        description: "Abdülhey — Researcher for docs, APIs, and rationale.",
         model: "openai/gpt-5.4",
         variant: "none",
         prompt: buildResearcherPrompt(overrides.abdulhey?.prompt_append),
@@ -122,7 +161,7 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: true,
         description:
-          "Aslan Akbey — Kıdemli kod incelemecisi. İnce hataları ve güvenlik sorunlarını bulur.",
+          "Aslan Akbey — Senior reviewer who inspects correctness and conventions.",
         model: "openai/gpt-5.4",
         variant: "xhigh",
         prompt: buildReviewerPrompt(overrides["aslan-akbey"]?.prompt_append),
@@ -150,10 +189,10 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: true,
         description:
-          "İskender Büyük — Çapraz model bağımsız incelemeci.",
+          "İskender — Adversarial reviewer. Critically challenges assumptions and failure cases.",
         model: "openai/gpt-5.4",
         variant: "xhigh",
-        prompt: buildYetAnotherReviewerPrompt(overrides.iskender?.prompt_append),
+        prompt: buildAdversarialReviewerPrompt(overrides.iskender?.prompt_append),
         temperature: 0.4,
         color: "#9B59B6",
         tools: mcpDenyRules(
@@ -173,11 +212,32 @@ export function createHarnessAgents(
       overrides.iskender,
     ),
 
+    tuncay: withOverride(
+      {
+        mode: "subagent",
+        hidden: true,
+        description: "Tuncay — Scoped failure repair agent.",
+        model: "openai/gpt-5.4",
+        variant: "high",
+        prompt: buildRepairPrompt(overrides.tuncay?.prompt_append),
+        temperature: 0.1,
+        color: "#E67E22",
+        tools: mcpDenyRules(
+          "jina",
+          "websearch",
+          "grep_app",
+          "web-agent-mcp",
+          "figma-console",
+        ),
+      },
+      overrides.tuncay,
+    ),
+
     halit: withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Cerrahpaşalı Halit — Derleme, test, lint doğrulayıcı.",
+        description: "Halit — Build, test, lint verifier.",
         model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildVerifierPrompt(overrides.halit?.prompt_append),
@@ -198,48 +258,27 @@ export function createHarnessAgents(
       overrides.halit,
     ),
 
-    tuncay: withOverride(
-      {
-        mode: "subagent",
-        hidden: true,
-        description: "Tuncay Kantarcı — Kapsamlı hata tamircisi.",
-        model: "openai/gpt-5.4",
-        variant: "high",
-        prompt: buildRepairPrompt(overrides.tuncay?.prompt_append),
-        temperature: 0.1,
-        color: "#E67E22",
-        tools: mcpDenyRules(
-          "jina",
-          "websearch",
-          "grep_app",
-          "web-agent-mcp",
-          "figma-console",
-        ),
-      },
-      overrides.tuncay,
-    ),
-
-    ebru: withOverride(
+    "gullu-erhan": withOverride(
       {
         mode: "subagent",
         hidden: true,
         description:
-          "Ebru Duru — Figma ve tarayıcı otomasyonu ile frontend uzmanı.",
+          "Güllü Erhan — Frontend specialist with Figma and browser automation.",
         model: "openai/gpt-5.4",
         variant: "high",
-        prompt: buildUiDeveloperPrompt(overrides.ebru?.prompt_append),
+        prompt: buildUiDeveloperPrompt(overrides["gullu-erhan"]?.prompt_append),
         temperature: 0.5,
         color: "#FF69B4",
         tools: mcpDenyRules("pg-mcp", "ssh-mcp", "mariadb"),
       },
-      overrides.ebru,
+      overrides["gullu-erhan"],
     ),
 
     "laz-ziya": withOverride(
       {
         mode: "subagent",
         hidden: true,
-        description: "Laz Ziya — Hızlı kod tabanı kaşifi.",
+        description: "Laz Ziya — Fast codebase explorer.",
         model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildRepoScoutPrompt(overrides["laz-ziya"]?.prompt_append),
@@ -258,6 +297,35 @@ export function createHarnessAgents(
         ),
       },
       overrides["laz-ziya"],
+    ),
+
+    pala: withOverride(
+      {
+        mode: "subagent",
+        hidden: true,
+        description:
+          "Pala — Chaos tester specializing in edge cases and failure injection.",
+        model: "openai/gpt-5.4",
+        variant: "high",
+        prompt: buildChaosTesterPrompt(overrides.pala?.prompt_append),
+        temperature: 0.45,
+        color: "#8E44AD",
+        tools: mcpDenyRules(
+          "context7",
+          "jina",
+          "websearch",
+          "grep_app",
+          "web-agent-mcp",
+          "figma-console",
+          "pg-mcp",
+          "ssh-mcp",
+          "mariadb",
+        ),
+        permission: {
+          edit: "deny",
+        },
+      },
+      overrides.pala,
     ),
 
     // ── Disable OpenCode built-in agents ─────────────────────────
