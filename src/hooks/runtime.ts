@@ -607,7 +607,7 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
   // ── Plan mode ─────────────────────────────────────────────────
   function getPlanMode(sessionID: string): "planning" | "executing" {
     loadPlanModesFromDisk();
-    return planModes.get(sessionID) ?? "planning";
+    return planModes.get(sessionID) ?? "executing";
   }
 
   function setPlanMode(

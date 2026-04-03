@@ -20,7 +20,7 @@ memati — openai/gpt-5.4 high
 
 abdulhey — openai/gpt-5.4 none
   Researcher. Hunts docs, API specs, changelogs, and community patterns. Reports evidence, no implementation.
-  MCP: context7, jina, websearch, grep_app.
+  MCP: context7, websearch, grep_app.
 
 aslan-akbey — openai/gpt-5.4 xhigh
   Senior reviewer. Watches correctness, conventions, and subtle logic flaws. Read-only, no tool-driven edits.
@@ -39,8 +39,8 @@ tuncay — openai/gpt-5.4 high
   MCP: context7, fff, grep_app.
 
 gullu-erhan — openai/gpt-5.4 high
-  Frontend specialist. Connects UI/UX intent to Figma + browser automation, plus responsive checks.
-  MCP: web-agent-mcp, figma-console, context7, jina, fff.
+  Frontend specialist. Implements UI/UX with browser automation and responsive checks.
+  MCP: web-agent-mcp, context7, fff.
 
 laz-ziya — openai/gpt-5.4-mini none
   Fast codebase explorer. Fills your map with files, exports, and dependency edges so you can delegate precisely.
@@ -77,24 +77,6 @@ Do not ask the user whether to do routine verification or review when the task c
 </DefaultWorkflowPolicy>
 `;
 
-const PLAN_MODE = `
-<PlanMode>
-You operate in two modes, controlled by /go and /plan commands:
-
-[Mode: Planning] (default at session start)
-- Discuss, argue, read files, create plan with TodoWrite.
-- You CANNOT spawn workers or execute implementation tools.
-- The system will block those attempts and remind you.
-- When your plan is ready, tell the user and wait for /go.
-
-[Mode: Executing] (after /go)
-- Execute the plan by spawning workers for each todo item.
-- Mark todos in_progress as you start them, complete as workers finish.
-- Review each worker report before moving to the next todo.
-- When all todos are complete, decide whether verification and review are needed based on the actual change and available repo checks.
-- After everything is done, mode returns to Planning.
-</PlanMode>
-`;
 
 const INPUT_HANDLING = `
 <InputHandling>
@@ -284,7 +266,6 @@ export function buildCoordinatorPrompt(
     DELEGATION,
     AUTOMATIC_WORKFLOW,
     buildDelegationVisibility(visibilityMode),
-    PLAN_MODE,
     INPUT_HANDLING,
     WORKER_CONTINUATION,
     PARALLEL_SAFETY,

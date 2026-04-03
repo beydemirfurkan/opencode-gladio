@@ -55,8 +55,8 @@ export function createSessionStartHook(
         return;
       }
 
-      // Initialize plan mode to planning
-      runtime.setPlanMode(sessionID, "planning");
+      // Initialize plan mode to executing (no plan gate)
+      runtime.setPlanMode(sessionID, "executing");
 
       if (
         config.memory?.enabled !== false ||
@@ -79,19 +79,6 @@ export function createSessionStartHook(
         extractTextParts(output.parts ?? []),
       );
       runtime.setSessionLocale(input.sessionID, locale);
-
-      // Detect mode transitions via unique harness markers embedded in command templates.
-      // Markers are collision-resistant — normal conversation cannot trigger them.
-      const userText = extractTextParts(output.parts ?? []);
-      if (userText) {
-        const trimmed = userText.trim().toLowerCase();
-        if (trimmed.includes("[harness:mode:executing]")) {
-          runtime.setPlanMode(input.sessionID, "executing");
-          runtime.resetPlanModeBlockCount(input.sessionID);
-        } else if (trimmed.includes("[harness:mode:planning]")) {
-          runtime.setPlanMode(input.sessionID, "planning");
-        }
-      }
 
       // Subagents get minimal project facts only (no session context, no mode)
       if (agentName && !PRIMARY_AGENTS.has(agentName)) {

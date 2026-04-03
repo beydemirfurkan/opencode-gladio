@@ -108,26 +108,12 @@ function prepareDoctorEnvironment(
   };
 
   const previousConfigDir = process.env.OPENCODE_CONFIG_DIR;
-  const previousFigmaToken = process.env.FIGMA_ACCESS_TOKEN;
-  const previousJinaKey = process.env.JINA_API_KEY;
   process.env.OPENCODE_CONFIG_DIR = configDir;
-  process.env.FIGMA_ACCESS_TOKEN = "test-figma-token";
-  process.env.JINA_API_KEY = "test-jina-token";
   const cleanup = () => {
     if (previousConfigDir === undefined) {
       delete process.env.OPENCODE_CONFIG_DIR;
     } else {
       process.env.OPENCODE_CONFIG_DIR = previousConfigDir;
-    }
-    if (previousFigmaToken === undefined) {
-      delete process.env.FIGMA_ACCESS_TOKEN;
-    } else {
-      process.env.FIGMA_ACCESS_TOKEN = previousFigmaToken;
-    }
-    if (previousJinaKey === undefined) {
-      delete process.env.JINA_API_KEY;
-    } else {
-      process.env.JINA_API_KEY = previousJinaKey;
     }
   };
 

@@ -68,17 +68,6 @@ export const HarnessConfigSchema = z.object({
       enabled: z.boolean().optional(),
     })
     .optional(),
-  credentials: z
-    .object({
-      jina_api_key: z.string().optional(),
-      figma_access_token: z.string().optional(),
-    })
-    .optional(),
-  figma_console: z
-    .object({
-      ssh_host: z.string().optional(),
-    })
-    .optional(),
   hooks: z
     .object({
       profile: z.enum(["minimal", "standard", "strict"]).optional(),
@@ -132,8 +121,6 @@ export const HarnessConfigSchema = z.object({
       pg_mcp: z.boolean().optional(),
       ssh_mcp: z.boolean().optional(),
       sudo_mcp: z.boolean().optional(),
-      jina: z.boolean().optional(),
-      figma_console: z.boolean().optional(),
       mariadb: z.boolean().optional(),
     })
     .optional(),
@@ -162,7 +149,7 @@ const DEFAULTS: HarnessConfig = {
   default_mode: "coordinator",
   set_default_agent: true,
   ui: {
-    worker_visibility: "summary",
+    worker_visibility: "visible",
   },
   commands: {
     enabled: true,
@@ -207,8 +194,6 @@ const DEFAULTS: HarnessConfig = {
     pg_mcp: true,
     ssh_mcp: true,
     sudo_mcp: false,
-    jina: true,
-    figma_console: true,
     mariadb: true,
   },
   agents: {},
@@ -221,13 +206,11 @@ const ConfigSectionSchemas = {
   set_default_agent: HarnessConfigSchema.shape.set_default_agent,
   ui: HarnessConfigSchema.shape.ui,
   commands: HarnessConfigSchema.shape.commands,
-  credentials: HarnessConfigSchema.shape.credentials,
   hooks: HarnessConfigSchema.shape.hooks,
   memory: HarnessConfigSchema.shape.memory,
   learning: HarnessConfigSchema.shape.learning,
   optional_components: HarnessConfigSchema.shape.optional_components,
   runtime: HarnessConfigSchema.shape.runtime,
-  figma_console: HarnessConfigSchema.shape.figma_console,
   mcps: HarnessConfigSchema.shape.mcps,
   agents: HarnessConfigSchema.shape.agents,
   fallbacks: HarnessConfigSchema.shape.fallbacks,
@@ -428,11 +411,7 @@ export function loadResolvedHarnessConfig(
 }
 
 const SECRET_MASK = "*****";
-const SECRET_PATHS: string[][] = [
-  ["credentials", "jina_api_key"],
-  ["credentials", "figma_access_token"],
-  ["figma_console", "ssh_host"],
-];
+const SECRET_PATHS: string[][] = [];
 
 function cloneValue(value: unknown): unknown {
   if (Array.isArray(value)) {
@@ -651,14 +630,7 @@ export const SAMPLE_PROJECT_CONFIG = `{
   "schema_version": ${CURRENT_HARNESS_SCHEMA_VERSION},
   "default_mode": "coordinator",
   "ui": {
-    "worker_visibility": "summary"
-  },
-  "credentials": {
-    "jina_api_key": "",
-    "figma_access_token": ""
-  },
-  "figma_console": {
-    "ssh_host": ""
+    "worker_visibility": "visible"
   },
   "hooks": {
     "profile": "standard",
@@ -700,8 +672,6 @@ export const SAMPLE_PROJECT_CONFIG = `{
     "pg_mcp": true,
     "ssh_mcp": true,
     "sudo_mcp": false,
-    "jina": true,
-    "figma_console": true,
     "mariadb": true
   },
   "agents": {}

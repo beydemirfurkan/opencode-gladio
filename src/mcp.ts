@@ -1,7 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { parse } from "jsonc-parser";
 import type { HarnessConfig } from "./types";
 
 type McpConfig = Record<string, unknown>;
@@ -27,11 +26,6 @@ function binRoot(): string {
   return join(configRoot(), "bin");
 }
 
-function ensureBearer(token: string): string {
-  return token.trim().toLowerCase().startsWith("bearer ")
-    ? token.trim()
-    : `Bearer ${token.trim()}`;
-}
 
 function resolveVendorMcpPath(name: string): string {
   return join(vendorRoot(), "mcp", name);
@@ -45,51 +39,6 @@ export function resolveMcpServerRoot(name: string): string {
   return join(configRoot(), "mcp", name);
 }
 
-function readExistingJinaBearer(): string | undefined {
-  const root = configRoot();
-  const candidates = [
-    join(root, "opencode.json"),
-    join(root, "opencode.jsonc"),
-  ];
-
-  for (const filePath of candidates) {
-    if (!existsSync(filePath)) {
-      continue;
-    }
-
-    try {
-      const parsed = parse(readFileSync(filePath, "utf8")) as {
-        mcp?: {
-          jina?: {
-            headers?: {
-              Authorization?: string;
-            };
-          };
-        };
-      };
-      const bearer = parsed?.mcp?.jina?.headers?.Authorization;
-      if (typeof bearer === "string" && bearer.trim()) {
-        return bearer;
-      }
-    } catch {}
-  }
-
-  return undefined;
-}
-
-export function resolveJinaBearer(config: HarnessConfig): string | undefined {
-  const configuredToken = config.credentials?.jina_api_key?.trim();
-  if (configuredToken) {
-    return ensureBearer(configuredToken);
-  }
-
-  const envToken = process.env.JINA_API_KEY?.trim();
-  if (envToken) {
-    return ensureBearer(envToken);
-  }
-
-  return readExistingJinaBearer();
-}
 
 function localCommand(scriptPath: string): string[] {
   return ["node", scriptPath];
@@ -237,65 +186,6 @@ export function createHarnessMcps(
         command: localCommand(join(serverRoot, "src", "index.js")),
         environment: {
           SSH_MCP_CONFIG_PATH: sshConfigPath,
-        },
-        enabled: true,
-        timeout: 60000,
-      };
-    }
-  }
-
-  if (toggles.jina !== false) {
-    const bearer = resolveJinaBearer(config);
-    if (bearer) {
-      result.jina = {
-        type: "remote",
-        url: "https://mcp.jina.ai/v1",
-        headers: { Authorization: bearer },
-        enabled: true,
-        oauth: false,
-        timeout: 60000,
-      };
-    }
-  }
-
-  if (toggles.figma_console !== false) {
-    const figmaAccessToken =
-      config.credentials?.figma_access_token?.trim() ||
-      process.env.FIGMA_ACCESS_TOKEN?.trim();
-
-    const sshHost = config.figma_console?.ssh_host?.trim();
-
-    if (sshHost) {
-      const envParts = [
-        'PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"',
-        "ENABLE_MCP_APPS=true",
-      ];
-      if (figmaAccessToken) {
-        envParts.push(`FIGMA_ACCESS_TOKEN=${figmaAccessToken}`);
-      }
-      envParts.push("npx", "-y", "figma-console-mcp@latest");
-
-      result["figma-console"] = {
-        type: "local",
-        command: [
-          "ssh",
-          "-o",
-          "BatchMode=yes",
-          "-o",
-          "StrictHostKeyChecking=no",
-          sshHost,
-          envParts.join(" "),
-        ],
-        enabled: true,
-        timeout: 60000,
-      };
-    } else if (figmaAccessToken) {
-      result["figma-console"] = {
-        type: "local",
-        command: ["npx", "-y", "figma-console-mcp@latest"],
-        environment: {
-          FIGMA_ACCESS_TOKEN: figmaAccessToken,
-          ENABLE_MCP_APPS: "true",
         },
         enabled: true,
         timeout: 60000,

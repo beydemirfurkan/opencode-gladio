@@ -7,19 +7,12 @@ import {
   resolveSessionID,
   resolveToolArgs,
   resolveToolName,
-  PRIMARY_AGENTS,
 } from "./runtime";
 
 const NODE_COMMAND_RE =
   /^(npm|pnpm|yarn|bun|npx|bunx|node|tsc|tsx|vite|next|nuxt|vitest|jest|eslint|prettier)\b/;
 
 const NODE_MODULES_BIN_RE = /node_modules\/\.bin\//;
-
-const PLAN_MODE_BLOCKED_TOOLS = new Set(["task", "edit", "write", "patch"]);
-
-function isAgentOrTaskTool(tool: string): boolean {
-  return tool === "task" || tool.startsWith("task_");
-}
 
 function isNodeCommand(command: string): boolean {
   return (
@@ -59,27 +52,6 @@ export function createPreToolUseHook(
 
       if (sessionID) {
         runtime.incrementToolCount(sessionID);
-      }
-
-      // ── Plan mode gate (coordinator only) ───────────────────────
-      if (
-        sessionID &&
-        agent &&
-        PRIMARY_AGENTS.has(agent) &&
-        tool &&
-        runtime.getPlanMode(sessionID) === "planning"
-      ) {
-        const blocked =
-          PLAN_MODE_BLOCKED_TOOLS.has(tool) || isAgentOrTaskTool(tool);
-
-        if (blocked) {
-          const count = runtime.incrementPlanModeBlock(sessionID);
-          const msg =
-            count >= 3
-              ? "[PlanMode] STILL in planning mode. You have attempted execution tools multiple times. STOP trying. Complete your plan with TodoWrite. The user will /go to start execution."
-              : "[PlanMode] You are in planning mode. Cannot use execution tools. Use Read/Glob/Grep/TodoWrite to continue planning. The user will /go to start execution.";
-          throw new BlockingHookError(msg);
-        }
       }
 
       // ── WSL node command auto-transform ─────────────────────────

@@ -15,9 +15,6 @@ const baseEffectiveConfig: HarnessConfig = {
   schema_version: CURRENT_HARNESS_SCHEMA_VERSION,
   default_mode: "coordinator",
   set_default_agent: true,
-  credentials: {
-    jina_api_key: "secret-api",
-  },
   hooks: {
     profile: "strict",
     session_start: false,
@@ -51,9 +48,6 @@ const baseResolved: ResolvedHarnessConfig = {
   migrationWarnings: ["migration-1"],
   validationWarnings: ["validation-1"],
   userConfig: {
-    credentials: {
-      jina_api_key: "secret-api",
-    },
     hooks: {
       profile: "standard",
     },
@@ -94,19 +88,16 @@ const baseResolved: ResolvedHarnessConfig = {
 };
 
 describe("Config show helpers", () => {
-  it("masks known secret fields", () => {
+  it("maskHarnessConfigSecrets returns config unchanged when no secrets present", () => {
     const masked = maskHarnessConfigSecrets(baseResolved.effectiveConfig);
-    expect(masked.credentials?.jina_api_key).toBe("*****");
-    expect(baseResolved.effectiveConfig.credentials?.jina_api_key).toBe("secret-api");
+    expect(masked.hooks?.profile).toBe("strict");
   });
 
   it("derives key-level source attribution", () => {
     const attribution = buildConfigSourceAttribution(baseResolved);
-    const credentials = attribution.credentials as ConfigSourceMap;
     const hooks = attribution.hooks as ConfigSourceMap;
     const memory = attribution.memory as ConfigSourceMap;
 
-    expect(credentials.jina_api_key).toBe("user");
     expect(hooks.profile).toBe("project");
     expect(hooks.session_start).toBe("project");
     expect(memory.enabled).toBe("project");
@@ -117,16 +108,12 @@ describe("Config show helpers", () => {
     expect(text).toContain("Migration warnings:");
     expect(text).toContain("Validation warnings:");
     expect(text).toContain("Source attribution:");
-    expect(text).toContain('"jina_api_key": "*****"');
     expect(text).toContain("Optional component readiness:");
     expect(text).toContain("Agent fallback state:");
   });
 
   it("builds JSON payload with masked config and optional attribution", () => {
     const payload = buildConfigShowJson(baseResolved);
-    const effective = payload.effectiveConfig as Record<string, unknown>;
-    const credentials = effective.credentials as Record<string, unknown>;
-    expect(credentials.jina_api_key).toBe("*****");
     expect(payload.sourceAttribution).toBeUndefined();
     const optional = payload.optionalComponents as OptionalComponentStatuses;
     expect(optional.backgroundAgents.ready).toBe(true);

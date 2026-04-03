@@ -38,8 +38,6 @@ export type McpToggles = {
   pg_mcp?: boolean;
   ssh_mcp?: boolean;
   sudo_mcp?: boolean;
-  jina?: boolean;
-  figma_console?: boolean;
   mariadb?: boolean;
 };
 
@@ -85,10 +83,6 @@ export type OptionalComponentStatuses = {
   mcps: Record<string, OptionalComponentStatus>;
 };
 
-export type FigmaConsoleConfig = {
-  ssh_host?: string;
-};
-
 export type AgentOverride = {
   model?: string;
   variant?: string;
@@ -104,11 +98,6 @@ export type HarnessConfig = {
   commands?: {
     enabled?: boolean;
   };
-  credentials?: {
-    jina_api_key?: string;
-    figma_access_token?: string;
-  };
-  figma_console?: FigmaConsoleConfig;
   hooks?: {
     profile?: HookProfile;
     comment_guard?: boolean;

@@ -9,7 +9,6 @@ import {
   configRoot,
   isWebAgentMcpInstalled,
   resolveFffCommand,
-  resolveJinaBearer,
   resolveMcpServerRoot,
 } from "./mcp";
 
@@ -22,8 +21,6 @@ const MCP_TOGGLE_KEYS = [
   "pg_mcp",
   "ssh_mcp",
   "sudo_mcp",
-  "jina",
-  "figma_console",
   "mariadb",
 ] as const;
 
@@ -122,26 +119,6 @@ function evaluateMcpStatus(
     }
     case "sudo_mcp": {
       base.reason = "sudo_mcp is not yet supported.";
-      break;
-    }
-    case "jina": {
-      const bearer = resolveJinaBearer(config);
-      if (!bearer) {
-        base.reason = "Missing JINA API key or bearer token.";
-        break;
-      }
-      base.ready = true;
-      break;
-    }
-    case "figma_console": {
-      const envToken = process.env.FIGMA_ACCESS_TOKEN?.trim();
-      const configToken = config.credentials?.figma_access_token?.trim();
-      const sshHost = config.figma_console?.ssh_host?.trim();
-      if (!envToken && !configToken && !sshHost) {
-        base.reason = "Missing figma console SSH host or FIGMA_ACCESS_TOKEN.";
-        break;
-      }
-      base.ready = true;
       break;
     }
     default:
