@@ -1,4 +1,4 @@
-# opencode-pair-autonomy
+# opencode-gladio
 
 OpenCode harness with opinionated agent orchestration. One coordinator plus ten specialized workers (execution lead, implementer, researcher, reviewers, verifier, repair, frontend, explorer, chaos tester) and an automatic verify+review pipeline.
 
@@ -35,39 +35,39 @@ OpenCode harness with opinionated agent orchestration. One coordinator plus ten 
 ## Quick start
 
 ```bash
-bunx opencode-pair-autonomy install
+bunx opencode-gladio install
 ```
 
 From source:
 
 ```bash
-git clone https://github.com/cemalturkcan/opencode-pair-autonomy.git
-cd opencode-pair-autonomy
+git clone https://github.com/beydemirfurkan/opencode-gladio.git
+cd opencode-gladio
 bun install && bun run build && bun link
-opencode-pair-autonomy install
+opencode-gladio install
 ```
 
 ## Commands
 
 ```bash
-opencode-pair-autonomy install        # wire into OpenCode config
-opencode-pair-autonomy fresh-install  # rebuild harness files, keep user config
-opencode-pair-autonomy uninstall      # remove harness wiring
-opencode-pair-autonomy init           # create project-local config
-opencode-pair-autonomy print-config   # inspect generated config
+opencode-gladio install        # wire into OpenCode config
+opencode-gladio fresh-install  # rebuild harness files, keep user config
+opencode-gladio uninstall      # remove harness wiring
+opencode-gladio init           # create project-local config
+opencode-gladio print-config   # inspect generated config
 ```
 
 ## Config
 
 Merges from two layers (project wins):
 
-- `~/.config/opencode/opencode-pair-autonomy.jsonc` — user-level
-- `<project>/.opencode/opencode-pair-autonomy.jsonc` — project-level
+- `~/.config/opencode/opencode-gladio.jsonc` — user-level
+- `<project>/.opencode/opencode-gladio.jsonc` — project-level
 
 Create project config:
 
 ```bash
-opencode-pair-autonomy init
+opencode-gladio init
 ```
 
 ## Hooks

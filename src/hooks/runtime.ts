@@ -64,7 +64,7 @@ function getStateRoot(config: HarnessConfig): string {
   const configDir = envDir
     ? resolve(envDir)
     : join(homedir(), ".config", "opencode");
-  return join(configDir, "pair-autonomy-state");
+  return join(configDir, "gladio-state");
 }
 
 function projectKey(directory: string): string {

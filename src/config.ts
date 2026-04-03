@@ -151,7 +151,7 @@ function formatParseErrors(errors: ParseError[]): string {
 }
 
 function logConfigWarning(filePath: string, message: string): void {
-  console.warn(`[opencode-pair-autonomy] ${message} (${filePath})`);
+  console.warn(`[opencode-gladio] ${message} (${filePath})`);
 }
 
 function parseConfigPartially(
@@ -223,12 +223,12 @@ export function loadHarnessConfig(projectDirectory: string): HarnessConfig {
     homedir(),
     ".config",
     "opencode",
-    "opencode-pair-autonomy.jsonc",
+    "opencode-gladio.jsonc",
   );
   const projectPath = join(
     projectDirectory,
     ".opencode",
-    "opencode-pair-autonomy.jsonc",
+    "opencode-gladio.jsonc",
   );
 
   return deepMerge(
@@ -238,7 +238,7 @@ export function loadHarnessConfig(projectDirectory: string): HarnessConfig {
 }
 
 export const SAMPLE_PROJECT_CONFIG = `{
-  // Project-level overrides for opencode-pair-autonomy
+  // Project-level overrides for opencode-gladio
   "default_mode": "coordinator",
   "credentials": {
     "jina_api_key": "",

@@ -19,17 +19,17 @@
     "jina": true
   },
   "agents": {
-    "ryo": {
-      "variant": "high"
+    "polat": {
+      "variant": "xhigh"
     },
-    "shounen-bat": {
-      "model": "kimi-for-coding/k2p5"
+    "memati": {
+      "model": "openai/gpt-5.4"
     },
-    "eiri": {
-      "model": "kimi-for-coding/k2p5"
+    "abdulhey": {
+      "model": "openai/gpt-5.4"
     },
-    "bondrewd": {
-      "model": "kimi-for-coding/k2p5"
+    "aslan-akbey": {
+      "model": "openai/gpt-5.4"
     }
   }
 }

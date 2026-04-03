@@ -43,7 +43,7 @@ const MANAGED_PLUGIN_ENTRIES = [
 ] as const;
 
 const MANAGED_PACKAGE_NAMES = [
-  "opencode-pair-autonomy",
+  "opencode-gladio",
   "opencode-pty",
   "@mohak34/opencode-notifier",
   "@zenobius/opencode-skillful",
@@ -94,7 +94,7 @@ function getConfigPaths(configDir: string) {
     configJson: join(configDir, "opencode.json"),
     configJsonc: join(configDir, "opencode.jsonc"),
     packageJson: join(configDir, "package.json"),
-    harnessConfig: join(configDir, "opencode-pair-autonomy.jsonc"),
+    harnessConfig: join(configDir, "opencode-gladio.jsonc"),
     vendorDir: join(configDir, "vendor", "opencode-background-agents-local"),
     vendorMcpDir: join(configDir, "vendor", "mcp"),
     shellStrategyDir: join(configDir, "plugin", "shell-strategy"),
@@ -317,7 +317,7 @@ function removeHarnessPluginList(
       !managedBareNames.has(item) &&
       !managedBareNames.has(item.replace(/@latest$/, "")) &&
       !item.includes("opencode-background-agents-local") &&
-      !item.includes("opencode-pair-autonomy"),
+      !item.includes("opencode-gladio"),
   );
   return retained.length > 0 ? retained : undefined;
 }
@@ -644,7 +644,7 @@ async function installFffMcp(binDir: string): Promise<void> {
   const target = resolveFffReleaseTarget();
   if (!target) {
     console.warn(
-      `[opencode-pair-autonomy] Skipping fff-mcp install: unsupported platform ${process.platform}/${process.arch}`,
+      `[opencode-gladio] Skipping fff-mcp install: unsupported platform ${process.platform}/${process.arch}`,
     );
     return;
   }
@@ -870,7 +870,7 @@ function updatePackageJson(paths: ReturnType<typeof getConfigPaths>): string {
     dependencies[name] = spec;
   }
 
-  dependencies["opencode-pair-autonomy"] = resolveSelfPackageSpec();
+  dependencies["opencode-gladio"] = resolveSelfPackageSpec();
   delete dependencies["opencode-background-agents-local"];
   delete dependencies["opencode-shell-non-interactive-strategy"];
 
@@ -933,7 +933,7 @@ async function runBunInstall(configDir: string): Promise<void> {
 }
 
 async function ensureInstalledHarnessBuild(configDir: string): Promise<void> {
-  const packageDir = join(configDir, "node_modules", "opencode-pair-autonomy");
+  const packageDir = join(configDir, "node_modules", "opencode-gladio");
   const builtEntry = join(packageDir, "dist", "index.js");
   const sourceEntry = join(packageDir, "src", "index.ts");
 
@@ -955,7 +955,7 @@ async function ensureInstalledHarnessBuild(configDir: string): Promise<void> {
       }
       rejectPromise(
         new Error(
-          `bun run build failed for opencode-pair-autonomy with exit code ${code ?? -1}`,
+          `bun run build failed for opencode-gladio with exit code ${code ?? -1}`,
         ),
       );
     });
@@ -995,7 +995,7 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{
     await installFffMcp(paths.binDir);
   } catch (error) {
     console.warn(
-      `[opencode-pair-autonomy] Failed to install fff-mcp automatically: ${error instanceof Error ? error.message : String(error)}`,
+      `[opencode-gladio] Failed to install fff-mcp automatically: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
   installSelfContainedMcps(paths.vendorMcpDir, { fresh: options?.fresh });
@@ -1015,7 +1015,7 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{
     await installWebAgentMcpDeps(paths.vendorMcpDir);
   } catch (error) {
     console.warn(
-      `[opencode-pair-autonomy] Failed to install web-agent-mcp dependencies: ${error instanceof Error ? error.message : String(error)}`,
+      `[opencode-gladio] Failed to install web-agent-mcp dependencies: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
