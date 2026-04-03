@@ -14,7 +14,6 @@ import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { parse } from "jsonc-parser";
 import { spawn } from "node:child_process";
-import { createInterface } from "node:readline";
 import { SAMPLE_PROJECT_CONFIG } from "./config";
 
 type JsonRecord = Record<string, unknown>;
@@ -432,31 +431,6 @@ function readExistingJinaApiKey(harnessConfigPath: string): string | undefined {
   return normalizeJinaApiKey(bearer?.Authorization as string | undefined);
 }
 
-async function promptForJinaApiKey(
-  existing?: string,
-): Promise<string | undefined> {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    return existing;
-  }
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const suffix = existing ? " (press Enter to reuse existing value)" : "";
-    const answer = await new Promise<string>(
-      (resolveQuestion, rejectQuestion) => {
-        rl.question(`Enter Jina API key${suffix}: `, (value) =>
-          resolveQuestion(value),
-        );
-        rl.once("error", rejectQuestion);
-      },
-    );
-    const normalized = normalizeJinaApiKey(answer);
-    return normalized ?? existing;
-  } finally {
-    rl.close();
-  }
-}
-
 function readExistingFigmaAccessToken(
   harnessConfigPath: string,
 ): string | undefined {
@@ -475,62 +449,6 @@ function readExistingFigmaConsoleSshHost(
   const host = (existingHarness.figma_console as JsonRecord | undefined)
     ?.ssh_host as string | undefined;
   return host?.trim() || undefined;
-}
-
-async function promptForFigmaAccessToken(
-  existing?: string,
-): Promise<string | undefined> {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    return existing;
-  }
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const suffix = existing ? " (press Enter to reuse existing value)" : "";
-    const answer = await new Promise<string>(
-      (resolveQuestion, rejectQuestion) => {
-        rl.question(`Enter Figma Personal Access Token${suffix}: `, (value) =>
-          resolveQuestion(value),
-        );
-        rl.once("error", rejectQuestion);
-      },
-    );
-    const trimmed = answer.trim();
-    return trimmed || existing;
-  } finally {
-    rl.close();
-  }
-}
-
-async function promptForFigmaConsoleSshHost(
-  existing?: string,
-): Promise<string | undefined> {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    return existing;
-  }
-
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const suffix = existing
-      ? ` (press Enter to reuse "${existing}", type "local" for local mode)`
-      : " (leave empty for local mode)";
-    const answer = await new Promise<string>(
-      (resolveQuestion, rejectQuestion) => {
-        rl.question(
-          `Enter SSH host for Figma Console MCP (e.g. user@host)${suffix}: `,
-          (value) => resolveQuestion(value),
-        );
-        rl.once("error", rejectQuestion);
-      },
-    );
-    const trimmed = answer.trim();
-    if (trimmed.toLowerCase() === "local") {
-      return undefined;
-    }
-    return trimmed || existing;
-  } finally {
-    rl.close();
-  }
 }
 
 function writeHarnessConfig(
@@ -994,14 +912,10 @@ export async function installHarness(options?: { fresh?: boolean }): Promise<{
   ensureTuiConfig(configDir);
   ensureSkillsDir(paths.skillsDir);
 
-  const jinaApiKey = await promptForJinaApiKey(
-    readExistingJinaApiKey(paths.harnessConfig),
-  );
-  const figmaAccessToken = await promptForFigmaAccessToken(
-    readExistingFigmaAccessToken(paths.harnessConfig),
-  );
-  const figmaConsoleSshHost = await promptForFigmaConsoleSshHost(
-    readExistingFigmaConsoleSshHost(paths.harnessConfig),
+  const jinaApiKey = readExistingJinaApiKey(paths.harnessConfig);
+  const figmaAccessToken = readExistingFigmaAccessToken(paths.harnessConfig);
+  const figmaConsoleSshHost = readExistingFigmaConsoleSshHost(
+    paths.harnessConfig,
   );
   await installShellStrategyInstruction(paths.shellStrategyDir);
   await installBackgroundAgentsVendor(paths.vendorDir);
