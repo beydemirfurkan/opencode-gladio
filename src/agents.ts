@@ -1,9 +1,6 @@
 import type { AgentLike, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
-import {
-  buildCoordinatorPrompt,
-  buildCoordinatorPromptExp,
-} from "./prompts/coordinator";
+import { buildCoordinatorPrompt } from "./prompts/coordinator";
 import {
   buildWorkerPrompt,
   buildResearcherPrompt,
@@ -51,9 +48,7 @@ const COORDINATOR_DISABLED_TOOLS: Record<string, string> = {
 };
 
 // Per-worker MCP restrictions: disable MCPs they don't need.
-function mcpDenyRules(
-  ...disabledPrefixes: string[]
-): Record<string, string> {
+function mcpDenyRules(...disabledPrefixes: string[]): Record<string, string> {
   const tools: Record<string, string> = {};
   for (const prefix of disabledPrefixes) {
     tools[`${prefix}_*`] = "deny";
@@ -83,20 +78,7 @@ export function createHarnessAgents(
       overrides.polat,
     ),
 
-    "polat-exp": withOverride(
-      {
-        mode: "primary",
-        description:
-          "Polat Alemdar (Deneysel) — Yargı tabanlı delegasyon koordinatörü.",
-        model: "openai/gpt-5.4",
-        variant: "xhigh",
-        prompt: buildCoordinatorPromptExp(overrides["polat-exp"]?.prompt_append),
-        color: "#6c3483",
-        tools: COORDINATOR_DISABLED_TOOLS,
-        permission: { task: COORDINATOR_TASK_PERMISSIONS },
-      },
-      overrides["polat-exp"],
-    ),
+
 
     // ── Workers (subagents) ──────────────────────────────────────
     memati: withOverride(

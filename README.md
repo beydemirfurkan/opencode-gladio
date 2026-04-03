@@ -1,4 +1,4 @@
-# oh-my-pair-code
+# opencode-pair-autonomy
 
 OpenCode harness with opinionated agent orchestration — Kurtlar Vadisi edition. One coordinator, eight specialized workers, automatic verify+review pipeline.
 
@@ -32,14 +32,14 @@ OpenCode harness with opinionated agent orchestration — Kurtlar Vadisi edition
 ## Quick start
 
 ```bash
-bunx --bun github:cemalturkcan/oh-my-pair-code install
+bunx opencode-pair-autonomy install
 ```
 
 From source:
 
 ```bash
-git clone https://github.com/cemalturkcan/oh-my-pair-code.git
-cd oh-my-pair-code
+git clone https://github.com/cemalturkcan/opencode-pair-autonomy.git
+cd opencode-pair-autonomy
 bun install && bun run build && bun link
 opencode-pair-autonomy install
 ```
@@ -69,14 +69,14 @@ opencode-pair-autonomy init
 
 ## Hooks
 
-| Hook | What it does |
-|------|-------------|
-| `session.created` | Prepare session context injection |
-| `chat.message` | Inject mode, project docs, session memory (coordinator) or project facts (workers) |
-| `tool.execute.before` | Plan mode gate, long-running command detection |
-| `tool.execute.after` | Comment guard, file tracking, compact suggestions |
-| `session.idle` | Save session summary, promote learned patterns, cleanup old sessions |
-| `session.compacting` | Pre-compact observation snapshot |
+| Hook                  | What it does                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| `session.created`     | Prepare session context injection                                                  |
+| `chat.message`        | Inject mode, project docs, session memory (coordinator) or project facts (workers) |
+| `tool.execute.before` | Plan mode gate, long-running command detection                                     |
+| `tool.execute.after`  | Comment guard, file tracking, compact suggestions                                  |
+| `session.idle`        | Save session summary, promote learned patterns, cleanup old sessions               |
+| `session.compacting`  | Pre-compact observation snapshot                                                   |
 
 ## What install changes
 
