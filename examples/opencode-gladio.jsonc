@@ -3,7 +3,7 @@
   "default_mode": "coordinator",
   "set_default_agent": true,
   "ui": {
-    "worker_visibility": "summary"
+    "worker_visibility": "visible"
   },
   "hooks": {
     "profile": "standard",
@@ -26,8 +26,6 @@
     "pg_mcp": true,
     "ssh_mcp": true,
     "sudo_mcp": false,
-    "jina": true,
-    "figma_console": true,
     "mariadb": true
   },
   "agents": {
