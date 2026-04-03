@@ -43,6 +43,42 @@ export type McpToggles = {
   mariadb?: boolean;
 };
 
+export type RuntimeConfig = {
+  degrade_optional_failures?: boolean;
+};
+
+export type OptionalComponentsConfig = {
+  background_agents?: "auto" | "off";
+  shell_strategy?: "auto" | "off";
+};
+
+export type FallbackCandidateConfig = {
+  model?: string;
+  variant?: string;
+};
+
+export type FallbacksConfig = {
+  coordinator?: FallbackCandidateConfig[];
+  verifier?: FallbackCandidateConfig[];
+};
+
+export type OptionalComponentKind = "background_agents" | "shell_strategy" | "mcp";
+
+export type OptionalComponentStatus = {
+  id: string;
+  kind: OptionalComponentKind;
+  enabled: boolean;
+  ready: boolean;
+  reason?: string;
+};
+
+export type OptionalComponentStatuses = {
+  degradeOptionalFailures: boolean;
+  backgroundAgents: OptionalComponentStatus;
+  shellStrategy: OptionalComponentStatus;
+  mcps: Record<string, OptionalComponentStatus>;
+};
+
 export type FigmaConsoleConfig = {
   ssh_host?: string;
 };
@@ -55,6 +91,7 @@ export type AgentOverride = {
 };
 
 export type HarnessConfig = {
+  schema_version?: number;
   default_mode?: HarnessMode;
   set_default_agent?: boolean;
   commands?: {
@@ -93,6 +130,9 @@ export type HarnessConfig = {
   };
   mcps?: McpToggles;
   agents?: Record<string, AgentOverride>;
+  runtime?: RuntimeConfig;
+  optional_components?: OptionalComponentsConfig;
+  fallbacks?: FallbacksConfig;
 };
 
 export type AgentLike = Record<string, unknown>;

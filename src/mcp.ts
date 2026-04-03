@@ -11,7 +11,7 @@ function hasDisplay(): boolean {
   return Boolean(process.env.DISPLAY || process.env.WAYLAND_DISPLAY);
 }
 
-function configRoot(): string {
+export function configRoot(): string {
   const envDir = process.env.OPENCODE_CONFIG_DIR?.trim();
   if (envDir) {
     return envDir;
@@ -37,7 +37,7 @@ function resolveVendorMcpPath(name: string): string {
   return join(vendorRoot(), "mcp", name);
 }
 
-function resolveMcpServerRoot(name: string): string {
+export function resolveMcpServerRoot(name: string): string {
   const vendorPath = resolveVendorMcpPath(name);
   if (existsSync(vendorPath)) {
     return vendorPath;
@@ -77,6 +77,20 @@ function readExistingJinaBearer(): string | undefined {
   return undefined;
 }
 
+export function resolveJinaBearer(config: HarnessConfig): string | undefined {
+  const configuredToken = config.credentials?.jina_api_key?.trim();
+  if (configuredToken) {
+    return ensureBearer(configuredToken);
+  }
+
+  const envToken = process.env.JINA_API_KEY?.trim();
+  if (envToken) {
+    return ensureBearer(envToken);
+  }
+
+  return readExistingJinaBearer();
+}
+
 function localCommand(scriptPath: string): string[] {
   return ["node", scriptPath];
 }
@@ -99,7 +113,7 @@ function commandExistsInPath(command: string): boolean {
     );
 }
 
-function resolveFffCommand(): string[] {
+export function resolveFffCommand(): string[] {
   const configured = process.env.FFF_MCP_PATH?.trim();
   if (configured) {
     return [configured];
@@ -231,13 +245,7 @@ export function createHarnessMcps(
   }
 
   if (toggles.jina !== false) {
-    const configuredToken = config.credentials?.jina_api_key?.trim();
-    const bearer = configuredToken
-      ? ensureBearer(configuredToken)
-      : process.env.JINA_API_KEY
-        ? ensureBearer(process.env.JINA_API_KEY)
-        : readExistingJinaBearer();
-
+    const bearer = resolveJinaBearer(config);
     if (bearer) {
       result.jina = {
         type: "remote",
@@ -305,4 +313,15 @@ export function createHarnessMcps(
   }
 
   return result;
+}
+
+export function isWebAgentMcpInstalled(mcpDir: string): boolean {
+  const nodeModules = join(mcpDir, "node_modules");
+  if (!existsSync(nodeModules)) {
+    return false;
+  }
+  const requiredPackages = ["@modelcontextprotocol/sdk", "zod"];
+  return requiredPackages.every((pkg) =>
+    existsSync(join(nodeModules, ...pkg.split("/"))),
+  );
 }

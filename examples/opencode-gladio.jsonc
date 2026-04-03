@@ -1,4 +1,5 @@
 {
+  "schema_version": 1,
   "default_mode": "coordinator",
   "set_default_agent": true,
   "hooks": {

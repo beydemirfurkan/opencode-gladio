@@ -1,4 +1,4 @@
-import type { AgentLike, HarnessConfig } from "./types";
+import type { AgentLike, AgentOverride, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
 import { buildCoordinatorPrompt } from "./prompts/coordinator";
 import {
@@ -13,6 +13,7 @@ import {
   buildUiDeveloperPrompt,
   buildRepoScoutPrompt,
 } from "./prompts/workers";
+import { DEFAULT_PRIMARY_CANDIDATES, resolveFallbackState } from "./fallbacks";
 
 function withOverride(
   base: AgentLike,
@@ -20,6 +21,19 @@ function withOverride(
 ): AgentLike {
   if (!override) return base;
   return deepMerge(base, override);
+}
+
+function sanitizeOverride(override?: AgentOverride): AgentOverride | undefined {
+  if (!override) {
+    return undefined;
+  }
+
+  const { model, variant, ...rest } = override;
+  if (Object.keys(rest).length === 0) {
+    return undefined;
+  }
+
+  return rest;
 }
 
 function taskPermissions(...allowedPatterns: string[]) {
@@ -64,6 +78,9 @@ export function createHarnessAgents(
   config: HarnessConfig,
 ): Record<string, AgentLike> {
   const overrides = config.agents ?? {};
+  const fallbackState = resolveFallbackState(config);
+  const coordinatorCandidate = fallbackState.coordinator.selectedCandidate;
+  const verifierCandidate = fallbackState.verifier.selectedCandidate;
 
   return {
     // ── Coordinator (primary agent) ──────────────────────────────
@@ -72,14 +89,14 @@ export function createHarnessAgents(
         mode: "primary",
         description:
           "Polat — Orchestrator of the harness. Plans, argues, delegates, synthesizes.",
-        model: "openai/gpt-5.4",
-        variant: "xhigh",
+        model: coordinatorCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.model,
+        variant: coordinatorCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.variant,
         prompt: buildCoordinatorPrompt(overrides.polat?.prompt_append),
         color: "#4A90D9",
         tools: COORDINATOR_DISABLED_TOOLS,
         permission: { task: COORDINATOR_TASK_PERMISSIONS },
       },
-      overrides.polat,
+      sanitizeOverride(overrides.polat),
     ),
 
     // ── Workers (subagents) ──────────────────────────────────────
@@ -238,8 +255,8 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: true,
         description: "Halit — Build and test verifier.",
-        model: "openai/gpt-5.4-mini",
-        variant: "none",
+        model: verifierCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.verifier.model,
+        variant: verifierCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.verifier.variant,
         prompt: buildVerifierPrompt(overrides.halit?.prompt_append),
         temperature: 0.0,
         color: "#95A5A6",
@@ -255,7 +272,7 @@ export function createHarnessAgents(
           "mariadb",
         ),
       },
-      overrides.halit,
+      sanitizeOverride(overrides.halit),
     ),
 
     "gullu-erhan": withOverride(

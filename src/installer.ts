@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { parse } from "jsonc-parser";
 import { spawn } from "node:child_process";
 import { SAMPLE_PROJECT_CONFIG } from "./config";
+import { isWebAgentMcpInstalled } from "./mcp";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -33,7 +34,7 @@ type GitHubRelease = {
  * Each entry is written as `"<package>@latest"` in the config.
  * The vendor background-agents-local plugin stays as a `file://` entry.
  */
-const MANAGED_PLUGIN_ENTRIES = [
+export const MANAGED_PLUGIN_ENTRIES = [
   "@zenobius/opencode-skillful",
   "@franlol/opencode-md-table-formatter",
   "opencode-pty",
@@ -41,7 +42,7 @@ const MANAGED_PLUGIN_ENTRIES = [
   "opencode-anthropic-login-via-cli",
 ] as const;
 
-const MANAGED_PACKAGE_NAMES = [
+export const MANAGED_PACKAGE_NAMES = [
   "opencode-gladio",
   "opencode-pty",
   "@mohak34/opencode-notifier",
@@ -62,7 +63,7 @@ const PACKAGE_SPECS: Record<string, string> = {
   zod: "latest",
 };
 
-const MCP_NAMES = ["pg-mcp", "ssh-mcp", "web-agent-mcp"] as const;
+export const MCP_NAMES = ["pg-mcp", "ssh-mcp", "web-agent-mcp"] as const;
 
 const BACKGROUND_AGENT_FILES = [
   "background-agents.ts",
@@ -91,7 +92,7 @@ export function patchBackgroundAgentsSource(content: string): string {
   );
 }
 
-function getConfigDir(): string {
+export function getConfigDir(): string {
   const envDir = process.env.OPENCODE_CONFIG_DIR?.trim();
   if (envDir) {
     return resolve(envDir);
@@ -99,7 +100,7 @@ function getConfigDir(): string {
   return join(homedir(), ".config", "opencode");
 }
 
-function getConfigPaths(configDir: string) {
+export function getConfigPaths(configDir: string) {
   return {
     configDir,
     binDir: join(configDir, "bin"),
@@ -115,11 +116,13 @@ function getConfigPaths(configDir: string) {
   };
 }
 
+export type ConfigPaths = ReturnType<typeof getConfigPaths>;
+
 function bundledMcpSourceRoot(name: string): string {
   return join(packageRoot(), "vendor", "mcp", name);
 }
 
-function detectMainConfigPath(paths: ReturnType<typeof getConfigPaths>): {
+export function detectMainConfigPath(paths: ReturnType<typeof getConfigPaths>): {
   path: string;
   format: "json" | "jsonc";
 } {
@@ -132,7 +135,7 @@ function detectMainConfigPath(paths: ReturnType<typeof getConfigPaths>): {
   return { path: paths.configJson, format: "json" };
 }
 
-function readJsonLike(filePath: string): JsonRecord {
+export function readJsonLike(filePath: string): JsonRecord {
   if (!existsSync(filePath)) {
     return {};
   }
@@ -275,8 +278,18 @@ function resolveSelfPackageSpec(): string {
   return version || "latest";
 }
 
-function pluginEntryForPath(path: string): string {
+export function pluginEntryForPath(path: string): string {
   return `file://${path}`;
+}
+
+export function buildManagedPluginEntries(vendorDir: string): string[] {
+  const selfEntry = pluginEntryForPath(packageRoot());
+  const backgroundEntry = pluginEntryForPath(vendorDir);
+  return [
+    selfEntry,
+    ...MANAGED_PLUGIN_ENTRIES.map((pkg) => `${pkg}@latest`),
+    backgroundEntry,
+  ];
 }
 
 function matchesPackageEntry(entry: string, packageName: string): boolean {
@@ -293,13 +306,9 @@ function matchesAnyPackageEntry(
 }
 
 export function mergePluginList(existing: unknown, vendorDir: string): string[] {
-  const selfEntry = pluginEntryForPath(packageRoot());
-  const backgroundEntry = pluginEntryForPath(vendorDir);
-  const desired = [
-    selfEntry,
-    ...MANAGED_PLUGIN_ENTRIES.map((pkg) => `${pkg}@latest`),
-    backgroundEntry,
-  ];
+  const desired = buildManagedPluginEntries(vendorDir);
+  const selfEntry = desired[0];
+  const backgroundEntry = desired[desired.length - 1];
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
@@ -733,18 +742,6 @@ function installSelfContainedMcps(
         shouldOverwriteBundledMcpFile(relativePath, targetPath, options?.fresh),
     });
   }
-}
-
-function isWebAgentMcpInstalled(mcpDir: string): boolean {
-  const nodeModules = join(mcpDir, "node_modules");
-  if (!existsSync(nodeModules)) {
-    return false;
-  }
-  // Verify key dependencies actually exist inside node_modules
-  const requiredPackages = ["@modelcontextprotocol/sdk", "zod"];
-  return requiredPackages.every((pkg) =>
-    existsSync(join(nodeModules, ...pkg.split("/"))),
-  );
 }
 
 async function installWebAgentMcpDeps(vendorMcpDir: string): Promise<void> {
