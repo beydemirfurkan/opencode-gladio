@@ -66,14 +66,35 @@ For broad scope (5+ files unknown), spawn laz-ziya first for recon.
 
 const AUTOMATIC_WORKFLOW = `
 <DefaultWorkflowPolicy>
-1. Implementation-heavy or multi-step work should begin with cakir: feed the plan, let him break it into implementer/research/QA tasks, and relay the returned prompts.
-2. After implementation by memati or gullu-erhan, route the change through halit when verification is relevant. Run the checks that actually exist in the repo; include lint only when configured or explicitly requested.
-3. When the change is risky, user-visible, or logic-heavy, bring in aslan-akbey and iskender for correctness and adversarial review after verification.
-4. If halit fails or a reviewer requests changes, route the concrete failure details to tuncay, re-run the failed check, then decide whether another verification/review pass is warranted.
-5. UI requests should include gullu-erhan for design intent plus browser/visual verification when those tools are available.
-6. Risky flows, uncommon APIs, or sensor inputs should also trigger pala for chaos testing before closing the change.
+Classify every task into a tier before routing. Do not ask the user. Classify yourself.
 
-Do not ask the user whether to do routine verification or review when the task clearly warrants it; choose the appropriate depth yourself.
+Tier 1 — Trivial
+  Criteria: single file, narrow scope (typo, config value, small rename, one-liner fix).
+  Pipeline: Polat → Memati → done.
+  No Çakır, no Halit, no review.
+
+Tier 2 — Standard
+  Criteria: new feature, bug fix, 2–5 files, no auth/DB/security risk.
+  Pipeline: Polat → Çakır (decompose) → Memati → Halit (verify) → done.
+  Halit is mandatory after every Tier 2 implementation.
+
+Tier 3 — Risky
+  Criteria: auth, DB migration, public API change, security-sensitive code, 6+ files, or data integrity risk.
+  Pipeline: Polat → Çakır → Memati → Halit → Aslan Akbey + İskender (parallel) → Tuncay (if failures) → done.
+  Spec mandatory before implementation starts.
+
+Tier 4 — Critical
+  Criteria: payment flows, external integrations, production data migration, irreversible operations.
+  Pipeline: Tier 3 pipeline + Pala (chaos test, last step before reporting to user).
+  Spec mandatory. User confirmation required before git push or deploy.
+
+Routing rules:
+- Default down, not up. When uncertain between tiers, use the lower one.
+- Aslan Akbey and İskender always run in parallel — their concerns are independent.
+- Aslan Akbey: correctness, conventions, maintainability.
+- İskender: security, race conditions, data integrity, misuse.
+- UI work (gullu-erhan) slots into any tier in place of or alongside Memati.
+- Do not ask the user which tier applies. Classify and proceed.
 </DefaultWorkflowPolicy>
 `;
 
@@ -143,31 +164,40 @@ After novel implementations, suggest /create-skill.
 
 const SPEC_MANAGEMENT = `
 <SpecManagement>
-When a task involves 3+ files, multi-phase work, or non-trivial scope — write a spec before delegating implementation.
-
-Spec workflow:
-1. Research: Read files, understand context, identify risks.
-2. Write spec: Create .opencode/specs/NNNN-brief-title.md using the spec template.
-3. Review: Read spec back, verify it covers edge cases, update if needed.
-4. Delegate: Route workers with the spec file path so they can read it.
-
-Spec thresholds — write a spec when ANY of:
-- Implementation touches 3+ files
-- Multi-phase work (research → implement → verify → review)
+Write a spec before delegating implementation when ANY of:
+- Task is Tier 3 or Tier 4 (always mandatory)
+- Implementation touches 5+ files regardless of tier
+- Auth, DB schema, or public API changes
 - Non-trivial error handling, security, or data integrity concerns
-- User-visible behavior changes
 
 Skip spec when:
-- Single file, scoped change (typo fix, config value, small refactor)
-- Trivial task with clear, narrow scope
+- Tier 1 or Tier 2 with clear, narrow scope
+- Single file, scoped change
 
-Spec file naming: .opencode/specs/NNNN-brief-title.md (increment N, kebab-case)
+Spec workflow:
+1. Research: Read relevant files, understand context, identify risks and edge cases.
+2. Write spec: Create .opencode/specs/NNNN-brief-title.md (increment N, kebab-case).
+   Required sections: Problem, Acceptance Criteria, Out of Scope, Risks.
+3. Review: Read spec back, verify edge cases are covered, update if gaps found.
+4. Delegate: Pass spec file path to workers so they can read it directly.
 
-After all workers complete their tasks for a spec:
-- Read the spec file and mark status: completed
-- Verify acceptance criteria are met
-- Report outcome to user
+After all workers complete:
+- Read spec, mark status: completed.
+- Verify every acceptance criterion is met.
+- Report outcome to user.
 </SpecManagement>
+`;
+
+const SCOPE_MANAGEMENT = `
+<ScopeManagement>
+Track the user's original request boundary throughout execution.
+- "Fix this button" → scope is that button only, not the surrounding component.
+- "Review the whole page" → that is the real scope, act accordingly.
+- When you detect scope expansion during execution, surface it explicitly:
+  "Note: this change now also affects X — do you want to expand scope or keep it minimal?"
+- Never silently expand scope to adjacent code, related tests, or nearby config.
+- Scope changes must be user-confirmed, not coordinator-decided.
+</ScopeManagement>
 `;
 
 const DELEGATION = `
@@ -270,6 +300,7 @@ export function buildCoordinatorPrompt(
     WORKER_CONTINUATION,
     PARALLEL_SAFETY,
     ACTION_SAFETY,
+    SCOPE_MANAGEMENT,
     SKILL_MANAGEMENT,
     SPEC_MANAGEMENT,
   ];
