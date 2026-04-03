@@ -3,7 +3,7 @@ import type { PluginInput } from "@opencode-ai/plugin";
 const INTERNAL_SESSION_TITLE = "[plugin] prompt-refiner";
 const PLUGIN_SERVICE = "prompt-refiner";
 const REFINER_AGENT_NAME = "prompt-refiner";
-const DEFAULT_REFINER_MODEL = "anthropic/claude-haiku-4-5";
+const DEFAULT_REFINER_MODEL = "openai/gpt-5.4-mini";
 
 const internalSessionIDs = new Set<string>();
 const pendingVisibleDebug = new Map<string, string>();

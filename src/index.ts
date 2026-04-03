@@ -5,7 +5,7 @@ import { createHarnessMcps } from "./mcp";
 import { createHarnessCommands } from "./commands";
 import { createHarnessHooks } from "./hooks";
 
-const PairAutonomyPlugin: Plugin = async (ctx) => {
+const OpenCodeGladioPlugin: Plugin = async (ctx) => {
   const harnessConfig = loadHarnessConfig(ctx.directory);
   const hooks = await createHarnessHooks(ctx, harnessConfig);
 
@@ -80,4 +80,4 @@ const PairAutonomyPlugin: Plugin = async (ctx) => {
   };
 };
 
-export default PairAutonomyPlugin;
+export default OpenCodeGladioPlugin;

@@ -2,34 +2,63 @@
   "default_mode": "coordinator",
   "set_default_agent": true,
   "hooks": {
-    "intent_gate": false,
-    "todo_continuation": true,
+    "profile": "standard",
     "comment_guard": true,
-    "flush_queued_prompts": true,
-    "todo_continuation_cooldown_ms": 30000
+    "session_start": true,
+    "pre_tool_use": true,
+    "post_tool_use": true,
+    "pre_compact": true,
+    "stop": true,
+    "session_end": true,
+    "file_edited": true,
+    "prompt_refiner": false
   },
   "mcps": {
     "context7": true,
     "grep_app": true,
     "websearch": true,
-    "chrome_devtools": true,
+    "fff": true,
+    "web_agent_mcp": true,
     "pg_mcp": true,
     "ssh_mcp": true,
-    "sudo_mcp": true,
-    "jina": true
+    "sudo_mcp": false,
+    "jina": true,
+    "figma_console": true,
+    "mariadb": true
   },
   "agents": {
     "polat": {
       "variant": "xhigh"
     },
+    "cakir": {
+      "variant": "high"
+    },
     "memati": {
-      "model": "openai/gpt-5.4"
+      "variant": "high"
     },
     "abdulhey": {
-      "model": "openai/gpt-5.4"
+      "variant": "none"
     },
     "aslan-akbey": {
-      "model": "openai/gpt-5.4"
+      "variant": "xhigh"
+    },
+    "iskender": {
+      "variant": "xhigh"
+    },
+    "tuncay": {
+      "variant": "high"
+    },
+    "halit": {
+      "variant": "none"
+    },
+    "gullu-erhan": {
+      "variant": "high"
+    },
+    "laz-ziya": {
+      "variant": "none"
+    },
+    "pala": {
+      "variant": "high"
     }
   }
 }

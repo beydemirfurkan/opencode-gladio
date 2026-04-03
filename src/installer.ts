@@ -262,25 +262,39 @@ function resolveSelfPackageSpec(): string {
   return version || "latest";
 }
 
-function mergePluginList(existing: unknown, vendorDir: string): string[] {
-  const selfEntry = `file://${packageRoot()}`;
-  const backgroundEntry = `file://${vendorDir}`;
+function pluginEntryForPath(path: string): string {
+  return `file://${path}`;
+}
+
+function matchesPackageEntry(entry: string, packageName: string): boolean {
+  return entry === packageName || entry.startsWith(`${packageName}@`);
+}
+
+function matchesAnyPackageEntry(
+  entry: string,
+  packageNames: readonly string[],
+): boolean {
+  return packageNames.some((packageName) =>
+    matchesPackageEntry(entry, packageName),
+  );
+}
+
+export function mergePluginList(existing: unknown, vendorDir: string): string[] {
+  const selfEntry = pluginEntryForPath(packageRoot());
+  const backgroundEntry = pluginEntryForPath(vendorDir);
   const desired = [
     selfEntry,
     ...MANAGED_PLUGIN_ENTRIES.map((pkg) => `${pkg}@latest`),
     backgroundEntry,
   ];
-  const desiredBareNames = new Set<string>(MANAGED_PLUGIN_ENTRIES);
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
   const retained = current.filter(
     (item) =>
-      !desired.includes(item) &&
-      !desiredBareNames.has(item) &&
-      !desiredBareNames.has(item.replace(/@latest$/, "")) &&
-      !item.includes("opencode-background-agents-local") &&
-      !item.startsWith("file://"),
+      item !== selfEntry &&
+      item !== backgroundEntry &&
+      !matchesAnyPackageEntry(item, MANAGED_PLUGIN_ENTRIES),
   );
   return [...desired, ...retained];
 }
@@ -299,25 +313,20 @@ function mergeInstructionsList(
   return [shellInstruction, ...retained];
 }
 
-function removeHarnessPluginList(
+export function removeHarnessPluginList(
   existing: unknown,
   vendorDir: string,
 ): string[] | undefined {
-  const managedBareNames = new Set<string>(MANAGED_PLUGIN_ENTRIES);
-  const managedEntries = new Set([
-    ...MANAGED_PLUGIN_ENTRIES.map((pkg) => `${pkg}@latest`),
-    `file://${vendorDir}`,
-  ]);
+  const selfEntry = pluginEntryForPath(packageRoot());
+  const backgroundEntry = pluginEntryForPath(vendorDir);
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
   const retained = current.filter(
     (item) =>
-      !managedEntries.has(item) &&
-      !managedBareNames.has(item) &&
-      !managedBareNames.has(item.replace(/@latest$/, "")) &&
-      !item.includes("opencode-background-agents-local") &&
-      !item.includes("opencode-gladio"),
+      item !== selfEntry &&
+      item !== backgroundEntry &&
+      !matchesAnyPackageEntry(item, MANAGED_PACKAGE_NAMES),
   );
   return retained.length > 0 ? retained : undefined;
 }
@@ -391,9 +400,14 @@ function normalizeLegacyRuleset(config: JsonRecord): void {
   }
 }
 
-function forceAllowPermissions(config: JsonRecord): void {
+export function ensureDefaultAgent(config: JsonRecord): void {
+  if (config.default_agent === undefined) {
+    config.default_agent = "polat";
+  }
+}
+
+export function applySafePermissionNormalization(config: JsonRecord): void {
   normalizeLegacyRuleset(config);
-  config.permission = "allow";
 }
 
 function readExistingJinaApiKey(harnessConfigPath: string): string | undefined {
@@ -849,8 +863,8 @@ function updateConfig(paths: ReturnType<typeof getConfigPaths>): string {
     config.instructions,
     paths.shellStrategyDir,
   );
-  config.default_agent = "polat";
-  forceAllowPermissions(config);
+  ensureDefaultAgent(config);
+  applySafePermissionNormalization(config);
   writeJson(detected.path, config);
   return detected.path;
 }

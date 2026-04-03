@@ -237,7 +237,7 @@ export function createHarnessAgents(
       {
         mode: "subagent",
         hidden: true,
-        description: "Halit — Build, test, lint verifier.",
+        description: "Halit — Build and test verifier.",
         model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildVerifierPrompt(overrides.halit?.prompt_append),

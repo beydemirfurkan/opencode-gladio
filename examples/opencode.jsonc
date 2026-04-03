@@ -1,14 +1,13 @@
 {
   // Reference example for the plugin stack after installation.
   "plugin": [
-    "opencode-gladio",
-    "opencode-pty",
-    "opencode-notificator",
-    "@zenobius/opencode-skillful",
-    "file:///ABSOLUTE/PATH/TO/opencode-background-agents-local",
-    "@tarquinen/opencode-dcp",
-    "@franlol/opencode-md-table-formatter",
-    "opencode-anthropic-login-via-cli"
+    "file:///ABSOLUTE/PATH/TO/opencode-gladio",
+    "@zenobius/opencode-skillful@latest",
+    "@franlol/opencode-md-table-formatter@latest",
+    "opencode-pty@latest",
+    "@mohak34/opencode-notifier@latest",
+    "opencode-anthropic-login-via-cli@latest",
+    "file:///ABSOLUTE/PATH/TO/opencode-background-agents-local"
   ],
   "instructions": [
     "~/.config/opencode/plugin/shell-strategy/shell_strategy.md"

@@ -1,50 +1,26 @@
 # Agent Matrix
 
-## Primary agents (tab-switchable)
+## Coordinator
 
-All primary agents run Claude Opus 4.6 with max thinking and full task permissions.
+| Agent | Role | Model | Variant |
+| --- | --- | --- | --- |
+| `polat` | Primary coordinator. Plans the work, debates alternatives, delegates to workers, and synthesizes the final response. | `openai/gpt-5.4` | `xhigh` |
 
-| Agent          | Role                                                                          | Model                       | Variant |
-| -------------- | ----------------------------------------------------------------------------- | --------------------------- | ------- |
-| `pair`         | Collaborative pair programmer. Plans first, confirms, executes, auto-reviews. | `anthropic/claude-opus-4-6` | `max`   |
-| `autonomous`   | Checkpointed autonomous executor. Runs independently until done or blocked.   | `anthropic/claude-opus-4-6` | `max`   |
-| `reviewer`     | Primary code reviewer. Launches cross-model review automatically.             | `anthropic/claude-opus-4-6` | `max`   |
-| `web-search`   | Web research agent. Starts researching immediately on activation.             | `anthropic/claude-opus-4-6` | `max`   |
-| `ui-developer` | UI craftsman. Figma extraction, creative design, live UX review.              | `anthropic/claude-opus-4-6` | `max`   |
+## Workers
 
-## Subagents
+| Agent | Role | Focus | Model | Variant |
+| --- | --- | --- | --- | --- |
+| `cakir` | Execution lead. Translates plans into discrete TODOs and routes them to specialists. | Task routing & accountability | `openai/gpt-5.4` | `high` |
+| `memati` | Implementer. Delivers production code for the agreed spec. | Core implementation | `openai/gpt-5.4` | `high` |
+| `abdulhey` | Researcher. Gathers docs, API references, and rationale. | Research & documentation | `openai/gpt-5.4` | `none` |
+| `aslan-akbey` | Senior reviewer. Inspects correctness, conventions, and style. | Peer review | `openai/gpt-5.4` | `xhigh` |
+| `iskender` | Adversarial reviewer. Challenges assumptions and uncovers subtle failure modes. | Adversarial critique | `openai/gpt-5.4` | `xhigh` |
+| `tuncay` | Repair specialist. Fixes verifier-reported failures and sharpens retries. | Scoped failure recovery | `openai/gpt-5.4` | `high` |
+| `halit` | Verifier. Runs builds, tests, and automated checks. | Verification & testing | `openai/gpt-5.4-mini` | `none` |
+| `gullu-erhan` | UI developer. Handles frontend, browser automation, and Figma handoffs. | UI/UX implementation | `openai/gpt-5.4` | `high` |
+| `laz-ziya` | Repo scout. Fast codebase explorer for context, patterns, and file discovery. | Reconnaissance | `openai/gpt-5.4-mini` | `none` |
+| `pala` | Chaos tester. Exercises edge cases and failure injection. | Chaos & robustness | `openai/gpt-5.4` | `high` |
 
-| Agent                  | Role                                            | Model                                | Variant |
-| ---------------------- | ----------------------------------------------- | ------------------------------------ | ------- |
-| `repo-scout`           | Repository pattern scout and file discovery.    | `anthropic/claude-sonnet-4-6-latest` | `max`   |
-| `researcher`           | External docs, APIs, and library research.      | `anthropic/claude-sonnet-4-6-latest` | `max`   |
-| `builder`              | Scoped implementation within assigned boundary. | `anthropic/claude-sonnet-4-6-latest` | `max`   |
-| `builder-deep`         | Complex multi-file implementation.              | `anthropic/claude-opus-4-6`          | `max`   |
-| `verifier`             | Verification and failure classification.        | `anthropic/claude-opus-4-6`          | `max`   |
-| `repair`               | Scoped repair for verifier-reported failures.   | `anthropic/claude-opus-4-6`          | `max`   |
-| `yet-another-reviewer` | Cross-model independent reviewer (GPT).         | `openai/gpt-5.4`                     | `max`   |
+## Delegation & workflow
 
-## Automatic delegation rules
-
-These fire automatically from `pair` and `autonomous` — no user action needed:
-
-| Trigger                                                  | Action                                          |
-| -------------------------------------------------------- | ----------------------------------------------- |
-| After significant work (multi-file, features, refactors) | `reviewer` + `yet-another-reviewer` in parallel |
-| After writing/modifying code                             | `verifier`                                      |
-| On verifier failure                                      | `repair` → re-verify                            |
-
-| UI/frontend tasks (pages, components, layouts, styling) | `ui-developer` |
-
-Trivial changes (typos, single-line fixes) skip the review cycle.
-
-## Model tier policy
-
-- **Primary agents**: Claude Opus 4.6 `max` — no exceptions.
-- **Subagents (minimum)**: Claude Sonnet 4.6 `max` — no haiku tier.
-- **Cross-model**: GPT 5.4 `max` for review diversity.
-
-## Language policy
-
-- All internal prompts, delegation packets, and structured outputs are in English.
-- User-facing replies follow the user's language.
+`polat` keeps the harness on track. After sketching the plan, they delegate execution to `cakir`, who hands off work items to implementers (`memati`, `gullu-erhan`), researchers (`abdulhey`), and specialists (`halit`, `tuncay`, `pala`, `laz-ziya`). Reviews involve `aslan-akbey` and `iskender` to catch stylistic issues and adversarial blind spots before `halit` runs the verification cycle. Failures cascade through `tuncay` for rapid repair, then back to the reviewers and verifiers. This mesh keeps every code edit fact-checked, reviewed, and bounded by the current GPT-based roster.

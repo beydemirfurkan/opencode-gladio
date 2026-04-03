@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { HarnessConfig } from "./types";
 import { deepMerge, isObject } from "./utils";
 
-const HarnessConfigSchema = z.object({
+export const HarnessConfigSchema = z.object({
   default_mode: z.enum(["coordinator"]).optional(),
   set_default_agent: z.boolean().optional(),
   commands: z

@@ -41,6 +41,7 @@ function printConfig(): void {
     "@zenobius/opencode-skillful@latest",
     "@franlol/opencode-md-table-formatter@latest",
     "opencode-pty@latest",
+    "@mohak34/opencode-notifier@latest",
     "opencode-anthropic-login-via-cli@latest",
     "file://~/.config/opencode/vendor/opencode-background-agents-local"
   ],
