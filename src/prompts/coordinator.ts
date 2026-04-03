@@ -4,6 +4,7 @@ import {
   buildMcpCatalog,
   withPromptAppend,
 } from "./shared";
+import type { WorkerVisibilityMode } from "../types";
 
 const WORKER_CATALOG = `
 <WorkerCatalog>
@@ -100,6 +101,35 @@ const INPUT_HANDLING = `
 On large paste: acknowledge immediately, process, respond. Never go silent.
 </InputHandling>
 `;
+
+function buildDelegationVisibility(mode: WorkerVisibilityMode = "summary"): string {
+  if (mode === "off") {
+    return "";
+  }
+
+  if (mode === "visible") {
+    return `
+<DelegationVisibility>
+- Keep orchestration visible to the user.
+- Before delegating meaningful work, give one short status line naming the worker and purpose.
+- After a meaningful worker completes, give one short result line before moving on.
+- Workers may appear in the UI. Keep your own updates compact so the timeline stays readable.
+- Good format: "Status: Çakır splitting execution plan." / "Done: Halit verified tests pass."
+- Do NOT narrate trivial reads, every retry, or internal reasoning.
+</DelegationVisibility>
+`;
+  }
+
+  return `
+<DelegationVisibility>
+- Keep orchestration visible to the user through short coordinator updates.
+- Before delegating meaningful work, give one short status line naming the worker and purpose.
+- After a meaningful worker completes, give one short result line before moving on.
+- Good format: "Status: Çakır splitting execution plan." / "Done: Halit verified tests pass."
+- Do NOT narrate trivial reads, every retry, or internal reasoning.
+</DelegationVisibility>
+`;
+}
 
 const WORKER_CONTINUATION = `
 <WorkerContinuation>
@@ -213,7 +243,10 @@ Reading 1-2 files yourself is fine. For broader exploration, scout first — its
 </Delegation>
 `;
 
-export function buildCoordinatorPrompt(promptAppend?: string): string {
+export function buildCoordinatorPrompt(
+  promptAppend?: string,
+  visibilityMode: WorkerVisibilityMode = "summary",
+): string {
   const sections = [
     COORDINATOR_CORE,
     RESPONSE_DISCIPLINE,
@@ -221,6 +254,7 @@ export function buildCoordinatorPrompt(promptAppend?: string): string {
     WORKER_CATALOG,
     DELEGATION,
     AUTOMATIC_WORKFLOW,
+    buildDelegationVisibility(visibilityMode),
     PLAN_MODE,
     INPUT_HANDLING,
     WORKER_CONTINUATION,

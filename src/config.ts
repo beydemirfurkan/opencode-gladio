@@ -58,6 +58,11 @@ export const HarnessConfigSchema = z.object({
   schema_version: z.number().int().positive().optional(),
   default_mode: z.enum(["coordinator"]).optional(),
   set_default_agent: z.boolean().optional(),
+  ui: z
+    .object({
+      worker_visibility: z.enum(["off", "summary", "visible"]).optional(),
+    })
+    .optional(),
   commands: z
     .object({
       enabled: z.boolean().optional(),
@@ -156,6 +161,9 @@ const DEFAULTS: HarnessConfig = {
   schema_version: CURRENT_HARNESS_SCHEMA_VERSION,
   default_mode: "coordinator",
   set_default_agent: true,
+  ui: {
+    worker_visibility: "summary",
+  },
   commands: {
     enabled: true,
   },
@@ -211,6 +219,7 @@ const ConfigSectionSchemas = {
   schema_version: HarnessConfigSchema.shape.schema_version,
   default_mode: HarnessConfigSchema.shape.default_mode,
   set_default_agent: HarnessConfigSchema.shape.set_default_agent,
+  ui: HarnessConfigSchema.shape.ui,
   commands: HarnessConfigSchema.shape.commands,
   credentials: HarnessConfigSchema.shape.credentials,
   hooks: HarnessConfigSchema.shape.hooks,
@@ -641,6 +650,9 @@ export const SAMPLE_PROJECT_CONFIG = `{
   // Project-level overrides for opencode-gladio
   "schema_version": ${CURRENT_HARNESS_SCHEMA_VERSION},
   "default_mode": "coordinator",
+  "ui": {
+    "worker_visibility": "summary"
+  },
   "credentials": {
     "jina_api_key": "",
     "figma_access_token": ""

@@ -47,6 +47,12 @@ export type RuntimeConfig = {
   degrade_optional_failures?: boolean;
 };
 
+export type WorkerVisibilityMode = "off" | "summary" | "visible";
+
+export type UiConfig = {
+  worker_visibility?: WorkerVisibilityMode;
+};
+
 export type OptionalComponentsConfig = {
   background_agents?: "auto" | "off";
   shell_strategy?: "auto" | "off";
@@ -94,6 +100,7 @@ export type HarnessConfig = {
   schema_version?: number;
   default_mode?: HarnessMode;
   set_default_agent?: boolean;
+  ui?: UiConfig;
   commands?: {
     enabled?: boolean;
   };

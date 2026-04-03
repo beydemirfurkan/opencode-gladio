@@ -78,6 +78,8 @@ export function createHarnessAgents(
   config: HarnessConfig,
 ): Record<string, AgentLike> {
   const overrides = config.agents ?? {};
+  const workerVisibilityMode = config.ui?.worker_visibility ?? "summary";
+  const workersHidden = workerVisibilityMode !== "visible";
   const fallbackState = resolveFallbackState(config);
   const coordinatorCandidate = fallbackState.coordinator.selectedCandidate;
   const verifierCandidate = fallbackState.verifier.selectedCandidate;
@@ -91,7 +93,10 @@ export function createHarnessAgents(
           "Polat — Orchestrator of the harness. Plans, argues, delegates, synthesizes.",
         model: coordinatorCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.model,
         variant: coordinatorCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.variant,
-        prompt: buildCoordinatorPrompt(overrides.polat?.prompt_append),
+        prompt: buildCoordinatorPrompt(
+          overrides.polat?.prompt_append,
+          workerVisibilityMode,
+        ),
         color: "#4A90D9",
         tools: COORDINATOR_DISABLED_TOOLS,
         permission: { task: COORDINATOR_TASK_PERMISSIONS },
@@ -103,7 +108,7 @@ export function createHarnessAgents(
     cakir: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description:
           "Çakır — Execution lead. Breaks plans into concrete work and routes it to specialists.",
         model: "openai/gpt-5.4",
@@ -140,7 +145,7 @@ export function createHarnessAgents(
     memati: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description: "Memati — Implementer. Delivers production code for the spec.",
         model: "openai/gpt-5.4",
         variant: "high",
@@ -155,7 +160,7 @@ export function createHarnessAgents(
     abdulhey: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description: "Abdülhey — Researcher for docs, APIs, and rationale.",
         model: "openai/gpt-5.4",
         variant: "none",
@@ -176,7 +181,7 @@ export function createHarnessAgents(
     "aslan-akbey": withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description:
           "Aslan Akbey — Senior reviewer who inspects correctness and conventions.",
         model: "openai/gpt-5.4",
@@ -204,7 +209,7 @@ export function createHarnessAgents(
     iskender: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description:
           "İskender — Adversarial reviewer. Critically challenges assumptions and failure cases.",
         model: "openai/gpt-5.4",
@@ -232,7 +237,7 @@ export function createHarnessAgents(
     tuncay: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description: "Tuncay — Scoped failure repair agent.",
         model: "openai/gpt-5.4",
         variant: "high",
@@ -253,7 +258,7 @@ export function createHarnessAgents(
     halit: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description: "Halit — Build and test verifier.",
         model: verifierCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.verifier.model,
         variant: verifierCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.verifier.variant,
@@ -278,7 +283,7 @@ export function createHarnessAgents(
     "gullu-erhan": withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description:
           "Güllü Erhan — Frontend specialist with Figma and browser automation.",
         model: "openai/gpt-5.4",
@@ -294,7 +299,7 @@ export function createHarnessAgents(
     "laz-ziya": withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description: "Laz Ziya — Fast codebase explorer.",
         model: "openai/gpt-5.4-mini",
         variant: "none",
@@ -319,7 +324,7 @@ export function createHarnessAgents(
     pala: withOverride(
       {
         mode: "subagent",
-        hidden: true,
+        hidden: workersHidden,
         description:
           "Pala — Chaos tester specializing in edge cases and failure injection.",
         model: "openai/gpt-5.4",
