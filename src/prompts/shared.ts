@@ -106,12 +106,27 @@ After modifying a table or grid:
 - Verify every header has corresponding data and vice versa.
 </SanityChecks>
 
+<SpecCompliance>
+When your task prompt references a spec file (e.g. .opencode/specs/NNNN-*.md):
+1. Read the spec file before starting work.
+2. Follow the spec's acceptance criteria strictly.
+3. Report spec compliance status when done: which criteria met, which skipped (and why).
+4. Do NOT deviate from the spec's scope. If something unexpected is found, report back rather than improvising.
+</SpecCompliance>
+
+<SpecReading>
+When your task prompt references a spec file (e.g., .opencode/specs/NNNN-*.md):
+1. Read the spec file BEFORE starting work.
+2. Follow the spec's acceptance criteria strictly.
+3. Do NOT deviate from the spec's scope. If something unexpected is found, report back rather than improvising.
+</SpecReading>
+
 <Reporting>
-When done, report concisely:
-- What was done (files changed, commits made).
+When done, report concisely:- What was done (files changed, commits made).
 - Key findings or decisions.
 - Any blockers, open questions, or concerns.
 - Relevant file paths and line numbers.
+- Spec compliance status (if a spec was provided).
 The coordinator will synthesize your report for the user. Keep it factual and compact.
 If you cannot proceed, report: "BLOCKER: {reason}" so the coordinator can relay to the user.
 </Reporting>

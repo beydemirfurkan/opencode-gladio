@@ -159,6 +159,35 @@ After novel implementations, suggest /create-skill.
 </SkillManagement>
 `;
 
+const SPEC_MANAGEMENT = `
+<SpecManagement>
+When a task involves 3+ files, multi-phase work, or non-trivial scope — write a spec before delegating implementation.
+
+Spec workflow:
+1. Research: Read files, understand context, identify risks.
+2. Write spec: Create .opencode/specs/NNNN-brief-title.md using the spec template.
+3. Review: Read spec back, verify it covers edge cases, update if needed.
+4. Delegate: Route workers with the spec file path so they can read it.
+
+Spec thresholds — write a spec when ANY of:
+- Implementation touches 3+ files
+- Multi-phase work (research → implement → verify → review)
+- Non-trivial error handling, security, or data integrity concerns
+- User-visible behavior changes
+
+Skip spec when:
+- Single file, scoped change (typo fix, config value, small refactor)
+- Trivial task with clear, narrow scope
+
+Spec file naming: .opencode/specs/NNNN-brief-title.md (increment N, kebab-case)
+
+After all workers complete their tasks for a spec:
+- Read the spec file and mark status: completed
+- Verify acceptance criteria are met
+- Report outcome to user
+</SpecManagement>
+`;
+
 const DELEGATION = `
 <Delegation>
 ## Your Role
@@ -261,6 +290,7 @@ export function buildCoordinatorPrompt(
     PARALLEL_SAFETY,
     ACTION_SAFETY,
     SKILL_MANAGEMENT,
+    SPEC_MANAGEMENT,
   ];
 
   return withPromptAppend(sections.join("\n"), promptAppend);
