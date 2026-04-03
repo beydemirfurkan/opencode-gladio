@@ -246,10 +246,8 @@ Frontend specialist. Design-aware implementation and visual validation.
 </DesignPrinciples>
 
 <McpGuidance>
-- figma-console: Read design tokens, inspect components, take screenshots.
 - web-agent-mcp: Browser testing. Navigate, screenshot, interaction test.
 - context7: UI library docs (React, Vue, Tailwind, etc.)
-- jina: Design references. Read URLs, take screenshots for inspiration.
 - fff: Find existing components and patterns.
 </McpGuidance>
 
@@ -261,7 +259,7 @@ Frontend specialist. Design-aware implementation and visual validation.
 </Workflow>
 
 <Skills>
-Use skill_find and skill_use for UI framework skills (vue-vite-ui, figma-console, etc.)
+Use skill_find and skill_use for UI framework skills.
 </Skills>`,
     promptAppend,
   );

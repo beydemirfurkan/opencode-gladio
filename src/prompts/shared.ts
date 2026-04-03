@@ -178,9 +178,7 @@ export function buildMcpCatalog(): string {
   return `
 <McpCatalog>
 Worker-only MCPs (not available to you directly, delegate to appropriate worker):
-- jina: Web reading, search, screenshots, academic papers, PDF analysis. Delegate to abdulhey or gullu-erhan.
 - web-agent-mcp: CloakBrowser with anti-detection. Interactive web tasks, login, form filling, UI testing. Delegate to gullu-erhan.
-- figma-console: Figma Desktop bridge. 63+ tools for design creation, components, screenshots. Delegate to gullu-erhan.
 Available to you and all workers:
 - context7: Library and framework documentation. resolve-library-id then query-docs.
 - fff: Fast local file finder and grep. Prefer over built-in glob/grep for large repos.

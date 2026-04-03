@@ -663,29 +663,16 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
   }
 
   // ── Mode injection for system prompt ──────────────────────────
-  function buildModeInjection(sessionID: string): string {
-    const mode = getPlanMode(sessionID);
-    const parts: string[] = [];
-
-    if (mode === "planning") {
-      parts.push(
-        "[Mode: Planning] Create your plan with TodoWrite. User will /go to execute.",
-      );
-    } else {
-      parts.push(
-        "[Mode: Executing] Proceed with worker spawning and todo execution.",
-      );
+  function buildModeInjection(_sessionID: string): string {
+    if (!wslMode) {
+      return "";
     }
 
-    if (wslMode) {
-      parts.push(
-        `[WSL] Windows project at ${wslWinPath}. Read/Edit via /mnt/ paths.`,
-        "Node tools (npm/pnpm/yarn/bun/npx/bunx/node/tsc/tsx/vite/next/nuxt/vitest/jest/eslint/prettier): run via cmd.exe.",
-        "Git/SSH/curl/grep: WSL bash OK.",
-      );
-    }
-
-    return parts.join("\n");
+    return [
+      `[WSL] Windows project at ${wslWinPath}. Read/Edit via /mnt/ paths.`,
+      "Node tools (npm/pnpm/yarn/bun/npx/bunx/node/tsc/tsx/vite/next/nuxt/vitest/jest/eslint/prettier): run via cmd.exe.",
+      "Git/SSH/curl/grep: WSL bash OK.",
+    ].join("\n");
   }
 
   return {
