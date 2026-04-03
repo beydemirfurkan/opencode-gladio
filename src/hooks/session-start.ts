@@ -55,9 +55,6 @@ export function createSessionStartHook(
         return;
       }
 
-      // Initialize plan mode to executing (no plan gate)
-      runtime.setPlanMode(sessionID, "executing");
-
       if (
         config.memory?.enabled !== false ||
         config.learning?.enabled !== false

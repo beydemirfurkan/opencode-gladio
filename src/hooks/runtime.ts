@@ -264,7 +264,6 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
   const observationsPath = join(learningDir, "observations.ndjson");
   const learnedPatternsPath = join(learningDir, "patterns.json");
   const learnedPatternsMarkdownPath = join(learningDir, "patterns.md");
-  const planModesPath = join(projectRoot, "plan-modes.json");
   const pendingInjection = new Map<string, PendingInjection>();
   const sessionAgents = new Map<string, string>();
   const sessionLocales = new Map<string, SupportedLocale>();
@@ -272,33 +271,6 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
   const toolCounts = new Map<string, number>();
   const compactHints = new Map<string, number>();
 
-  // ── Coordinator-specific state ────────────────────────────────
-  const planModes = new Map<string, "planning" | "executing">();
-  let planModesLoadedFromDisk = false;
-
-  function loadPlanModesFromDisk(): void {
-    if (planModesLoadedFromDisk) return;
-    planModesLoadedFromDisk = true;
-    const persisted = readJson<Record<string, "planning" | "executing">>(
-      planModesPath,
-      {},
-    );
-    for (const [id, mode] of Object.entries(persisted)) {
-      if (!planModes.has(id) && (mode === "planning" || mode === "executing")) {
-        planModes.set(id, mode);
-      }
-    }
-  }
-
-  function persistPlanModes(): void {
-    const entries: Record<string, "planning" | "executing"> = {};
-    for (const [id, mode] of planModes) {
-      entries[id] = mode;
-    }
-    writeJson(planModesPath, entries);
-  }
-
-  const planModeBlockCounts = new Map<string, number>();
   const workerMessageCounts = new Map<string, number>();
   const reviewCycleCounts = new Map<string, number>();
 
@@ -310,8 +282,6 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
     editedFiles,
     toolCounts,
     compactHints,
-    planModes,
-    planModeBlockCounts,
     workerMessageCounts,
     reviewCycleCounts,
   ] as Map<string, unknown>[];
@@ -597,38 +567,8 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
     editedFiles.delete(sessionID);
     toolCounts.delete(sessionID);
     compactHints.delete(sessionID);
-    planModes.delete(sessionID);
-    planModeBlockCounts.delete(sessionID);
     workerMessageCounts.delete(sessionID);
     reviewCycleCounts.delete(sessionID);
-    persistPlanModes();
-  }
-
-  // ── Plan mode ─────────────────────────────────────────────────
-  function getPlanMode(sessionID: string): "planning" | "executing" {
-    loadPlanModesFromDisk();
-    return planModes.get(sessionID) ?? "executing";
-  }
-
-  function setPlanMode(
-    sessionID: string,
-    mode: "planning" | "executing",
-  ): void {
-    planModes.set(sessionID, mode);
-    if (mode === "planning") {
-      planModeBlockCounts.delete(sessionID);
-    }
-    persistPlanModes();
-  }
-
-  function incrementPlanModeBlock(sessionID: string): number {
-    const count = (planModeBlockCounts.get(sessionID) ?? 0) + 1;
-    planModeBlockCounts.set(sessionID, count);
-    return count;
-  }
-
-  function resetPlanModeBlockCount(sessionID: string): void {
-    planModeBlockCounts.delete(sessionID);
   }
 
   // ── Worker continuation ───────────────────────────────────────
@@ -696,11 +636,6 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
     shouldSuggestCompact,
     clearSession,
     readText,
-    // Coordinator state
-    getPlanMode,
-    setPlanMode,
-    incrementPlanModeBlock,
-    resetPlanModeBlockCount,
     incrementWorkerMessages,
     shouldSpawnFresh,
     incrementReviewCycle,

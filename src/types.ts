@@ -1,7 +1,5 @@
 export type HarnessMode = "coordinator";
 
-export type PlanModeState = "planning" | "executing";
-
 export type WorkerType =
   | "cakir"
   | "memati"
