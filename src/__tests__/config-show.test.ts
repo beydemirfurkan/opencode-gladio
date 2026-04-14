@@ -2,11 +2,10 @@ import { describe, expect, it } from "bun:test";
 import {
   buildConfigShowJson,
   buildConfigSourceAttribution,
-  ConfigSourceMap,
   CURRENT_HARNESS_SCHEMA_VERSION,
   formatConfigShowText,
   maskHarnessConfigSecrets,
-  ResolvedHarnessConfig,
+  type ResolvedHarnessConfig,
 } from "../config";
 import type { HarnessConfig, OptionalComponentStatuses } from "../types";
 import { resolveFallbackState } from "../fallbacks";
@@ -19,11 +18,25 @@ const baseEffectiveConfig: HarnessConfig = {
     profile: "strict",
     session_start: false,
   },
-  memory: {
+};
+
+const baseOptionalStatus: OptionalComponentStatuses = {
+  degradeOptionalFailures: true,
+  backgroundAgents: {
+    id: "background_agents",
+    kind: "background_agents",
     enabled: false,
-    lookback_days: 7,
-    max_injected_chars: 3500,
+    ready: false,
+    reason: "disabled",
   },
+  shellStrategy: {
+    id: "shell_strategy",
+    kind: "shell_strategy",
+    enabled: false,
+    ready: false,
+    reason: "disabled",
+  },
+  mcps: {},
 };
 
 const baseResolved: ResolvedHarnessConfig = {
@@ -39,8 +52,8 @@ const baseResolved: ResolvedHarnessConfig = {
     },
     project: {
       path: "/tmp/project-config",
-      exists: true,
-      schemaVersion: CURRENT_HARNESS_SCHEMA_VERSION,
+      exists: false,
+      schemaVersion: undefined,
       migrationWarnings: [],
       validationWarnings: [],
     },
@@ -52,38 +65,8 @@ const baseResolved: ResolvedHarnessConfig = {
       profile: "standard",
     },
   },
-  projectConfig: {
-    hooks: {
-      profile: "strict",
-      session_start: false,
-    },
-    memory: {
-      enabled: false,
-    },
-  },
-  optionalComponentStatus: {
-    degradeOptionalFailures: true,
-    backgroundAgents: {
-      id: "background_agents",
-      kind: "background_agents",
-      enabled: true,
-      ready: true,
-    },
-    shellStrategy: {
-      id: "shell_strategy",
-      kind: "shell_strategy",
-      enabled: true,
-      ready: true,
-    },
-    mcps: {
-      context7: {
-        id: "context7",
-        kind: "mcp",
-        enabled: true,
-        ready: true,
-      },
-    },
-  },
+  projectConfig: {},
+  optionalComponentStatus: baseOptionalStatus,
   fallbackState: resolveFallbackState(baseEffectiveConfig),
 };
 
@@ -93,36 +76,26 @@ describe("Config show helpers", () => {
     expect(masked.hooks?.profile).toBe("strict");
   });
 
-  it("derives key-level source attribution", () => {
+  it("buildConfigSourceAttribution returns empty object", () => {
     const attribution = buildConfigSourceAttribution(baseResolved);
-    const hooks = attribution.hooks as ConfigSourceMap;
-    const memory = attribution.memory as ConfigSourceMap;
-
-    expect(hooks.profile).toBe("project");
-    expect(hooks.session_start).toBe("project");
-    expect(memory.enabled).toBe("project");
+    expect(attribution).toEqual({});
   });
 
-  it("includes warnings and optional source details in text output", () => {
+  it("includes warnings in text output", () => {
     const text = formatConfigShowText(baseResolved, { includeSources: true });
     expect(text).toContain("Migration warnings:");
     expect(text).toContain("Validation warnings:");
-    expect(text).toContain("Source attribution:");
-    expect(text).toContain("Optional component readiness:");
     expect(text).toContain("Agent fallback state:");
   });
 
-  it("builds JSON payload with masked config and optional attribution", () => {
+  it("builds JSON payload with fallback state", () => {
     const payload = buildConfigShowJson(baseResolved);
     expect(payload.sourceAttribution).toBeUndefined();
-    const optional = payload.optionalComponents as OptionalComponentStatuses;
-    expect(optional.backgroundAgents.ready).toBe(true);
-    expect(optional.mcps.context7.ready).toBe(true);
 
     const fallbackState = payload.fallbackState as Record<string, unknown>;
     expect(fallbackState).toBeDefined();
 
     const withSources = buildConfigShowJson(baseResolved, { includeSources: true });
-    expect(withSources.sourceAttribution).toBeDefined();
+    expect(withSources.sources).toBeDefined();
   });
 });

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "default_mode": "coordinator",
   "set_default_agent": true,
   "ui": {
@@ -7,7 +7,7 @@
   },
   "hooks": {
     "profile": "standard",
-    "comment_guard": true,
+    "comment_guard": false,
     "session_start": true,
     "pre_tool_use": true,
     "post_tool_use": true,
@@ -20,13 +20,16 @@
   "mcps": {
     "context7": true,
     "grep_app": true,
-    "websearch": true,
-    "fff": true,
-    "web_agent_mcp": true,
-    "pg_mcp": true,
-    "ssh_mcp": true,
-    "sudo_mcp": false,
-    "mariadb": true
+    "websearch": true
+  },
+  "fallbacks": {
+    "enabled": true,
+    "chains": {}
+  },
+  "multiplexer": {
+    "type": "none",
+    "layout": "main-vertical",
+    "main_pane_size": 60
   },
   "agents": {
     "polat": {

@@ -14,54 +14,16 @@ export type WorkerType =
 
 export type HookProfile = "minimal" | "standard" | "strict";
 
-export type WslState = {
-  enabled: boolean;
-  winDrive: string;
-  winProjectPath: string;
-};
-
-export type ResourceMap = {
-  sshHosts: string[];
-  dbConnections: { mariadb: string[]; postgres: string[] };
-  projectDocs: string[];
-  skills: string[];
-};
-
-export type McpToggles = {
-  context7?: boolean;
-  grep_app?: boolean;
-  websearch?: boolean;
-  fff?: boolean;
-  web_agent_mcp?: boolean;
-  pg_mcp?: boolean;
-  ssh_mcp?: boolean;
-  sudo_mcp?: boolean;
-  mariadb?: boolean;
-};
-
-export type RuntimeConfig = {
-  degrade_optional_failures?: boolean;
-};
-
 export type WorkerVisibilityMode = "off" | "summary" | "visible";
 
 export type UiConfig = {
   worker_visibility?: WorkerVisibilityMode;
 };
 
-export type OptionalComponentsConfig = {
-  background_agents?: "auto" | "off";
-  shell_strategy?: "auto" | "off";
-};
-
-export type FallbackCandidateConfig = {
-  model?: string;
-  variant?: string;
-};
-
-export type FallbacksConfig = {
-  coordinator?: FallbackCandidateConfig[];
-  verifier?: FallbackCandidateConfig[];
+export type McpToggles = {
+  context7?: boolean;
+  grep_app?: boolean;
+  websearch?: boolean;
 };
 
 export type OptionalComponentKind = "background_agents" | "shell_strategy" | "mcp";
@@ -81,6 +43,18 @@ export type OptionalComponentStatuses = {
   mcps: Record<string, OptionalComponentStatus>;
 };
 
+export type FallbackCandidateConfig = {
+  model?: string;
+  variant?: string;
+};
+
+export type FallbacksConfig = {
+  enabled?: boolean;
+  coordinator?: FallbackCandidateConfig[];
+  verifier?: FallbackCandidateConfig[];
+  chains?: Record<string, string[]>;
+};
+
 export type AgentOverride = {
   model?: string;
   variant?: string;
@@ -88,7 +62,20 @@ export type AgentOverride = {
   prompt_append?: string;
 };
 
+export type MultiplexerConfig = {
+  type?: "none" | "tmux" | "zellij";
+  layout?: "main-horizontal" | "main-vertical" | "tiled";
+  main_pane_size?: number;
+};
+
+export type TokenBudgetConfig = {
+  enabled?: boolean;
+  agentOverrides?: Record<string, { promptChars?: number; compactThreshold?: number; compactRepeat?: number }>;
+  globalCompactThreshold?: number;
+};
+
 export type HarnessConfig = {
+  token_budget?: TokenBudgetConfig;
   schema_version?: number;
   default_mode?: HarnessMode;
   set_default_agent?: boolean;
@@ -108,25 +95,10 @@ export type HarnessConfig = {
     file_edited?: boolean;
     prompt_refiner?: boolean;
   };
-  memory?: {
-    enabled?: boolean;
-    directory?: string;
-    lookback_days?: number;
-    max_injected_chars?: number;
-  };
-  learning?: {
-    enabled?: boolean;
-    directory?: string;
-    min_observations?: number;
-    auto_promote?: boolean;
-    max_patterns?: number;
-    max_injected_patterns?: number;
-  };
   mcps?: McpToggles;
   agents?: Record<string, AgentOverride>;
-  runtime?: RuntimeConfig;
-  optional_components?: OptionalComponentsConfig;
   fallbacks?: FallbacksConfig;
+  multiplexer?: MultiplexerConfig;
 };
 
 export type AgentLike = Record<string, unknown>;

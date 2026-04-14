@@ -51,21 +51,12 @@ function initProject(directory?: string): void {
 function printConfig(): void {
   console.log(`{
   "plugin": [
-    "file://<project-root>",
-    "@zenobius/opencode-skillful@latest",
-    "@franlol/opencode-md-table-formatter@latest",
-    "opencode-pty@latest",
-    "@mohak34/opencode-notifier@latest",
-    "opencode-anthropic-login-via-cli@latest",
-    "file://~/.config/opencode/vendor/opencode-background-agents-local"
-  ],
-  "instructions": [
-    "~/.config/opencode/plugin/shell-strategy/shell_strategy.md"
+    "opencode-gladio"
   ],
   "default_agent": "polat"
 }
 
-Use \`opencode-gladio install\` for the real path-aware install.`);
+Run \`npx opencode-gladio install\` or \`bunx opencode-gladio install\` for automatic setup.`);
 }
 
 function showConfig(options?: { json?: boolean; sources?: boolean }): void {

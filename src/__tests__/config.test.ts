@@ -68,23 +68,23 @@ describe("deepMerge", () => {
 
   it("handles three-level deep merge (defaults → user → project)", () => {
     const defaults = {
-      hooks: { profile: "standard", comment_guard: true, session_start: true },
-      memory: { enabled: true, lookback_days: 7 },
+      hooks: { profile: "standard", session_start: true },
+      mcps: { context7: true },
     };
     const userConfig = {
       hooks: { comment_guard: false },
-      memory: { lookback_days: 14 },
+      mcps: { websearch: false },
     };
     const projectConfig = {
-      memory: { enabled: false },
+      mcps: { grep_app: false },
     };
 
     const withUser = deepMerge(defaults, userConfig);
     const final = deepMerge(withUser, projectConfig);
 
     expect(final).toEqual({
-      hooks: { profile: "standard", comment_guard: false, session_start: true },
-      memory: { enabled: false, lookback_days: 14 },
+      hooks: { profile: "standard", session_start: true, comment_guard: false },
+      mcps: { context7: true, websearch: false, grep_app: false },
     });
   });
 
@@ -97,7 +97,6 @@ describe("deepMerge", () => {
   });
 
   it("skips prototype-polluting keys", () => {
-    // JSON.parse creates enumerable __proto__ as own property
     const malicious = JSON.parse('{"__proto__":{"polluted":true},"a":2}');
     const result = deepMerge({ a: 1 } as Record<string, unknown>, malicious);
     expect(result.a).toBe(2);

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "opencode-gladio",
+  "type": "object",
+  "properties": {
+    "schema_version": { "type": "integer" },
+    "default_mode": { "type": "string", "enum": ["coordinator"] },
+    "set_default_agent": { "type": "boolean" },
+    "ui": {
+      "type": "object",
+      "properties": {
+        "worker_visibility": {
+          "type": "string",
+          "enum": ["off", "summary", "visible"]
+        }
+      }
+    },
+    "mcps": {
+      "type": "object",
+      "properties": {
+        "context7": { "type": "boolean" },
+        "grep_app": { "type": "boolean" },
+        "websearch": { "type": "boolean" }
+      }
+    },
+    "multiplexer": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["none", "tmux", "zellij"] },
+        "layout": {
+          "type": "string",
+          "enum": ["main-horizontal", "main-vertical", "tiled"]
+        },
+        "main_pane_size": { "type": "integer" }
+      }
+    }
+  }
+}

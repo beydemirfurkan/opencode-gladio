@@ -52,6 +52,13 @@ export function createPreToolUseHook(
 
       if (sessionID) {
         runtime.incrementToolCount(sessionID);
+        const agent =
+          runtime.getSessionAgent(sessionID) ?? resolveAgentName(input) ?? "polat";
+        const toolArgs = resolveToolArgs(input);
+        const command = typeof toolArgs.command === "string" ? toolArgs.command : "";
+        const textContent = typeof toolArgs.text === "string" ? toolArgs.text : "";
+        const estimatedInput = Math.ceil(`${command} ${textContent}`.length / 4);
+        runtime.tokenManager.trackUsage(sessionID, estimatedInput, 0);
       }
 
       // ── WSL node command auto-transform ─────────────────────────

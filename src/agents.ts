@@ -1,6 +1,7 @@
 import type { AgentLike, AgentOverride, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
 import { buildCoordinatorPrompt } from "./prompts/coordinator";
+import { truncatePromptAppend, getAgentBudget, resolveEffectiveBudget } from "./token-manager";
 import {
   buildChaosTesterPrompt,
   buildExecutionLeadPrompt,
@@ -23,16 +24,14 @@ function withOverride(
   return deepMerge(base, override);
 }
 
-function sanitizeOverride(override?: AgentOverride): AgentOverride | undefined {
-  if (!override) {
-    return undefined;
-  }
-
+function sanitizeOverride(override?: AgentOverride, agentName?: string): AgentOverride | undefined {
+  if (!override) return undefined;
+  const maxPromptChars = agentName ? getAgentBudget(agentName).promptChars : 4000;
   const { model, variant, ...rest } = override;
-  if (Object.keys(rest).length === 0) {
-    return undefined;
+  if (rest.prompt_append) {
+    rest.prompt_append = truncatePromptAppend(rest.prompt_append, maxPromptChars);
   }
-
+  if (Object.keys(rest).length === 0) return undefined;
   return rest;
 }
 
@@ -57,12 +56,6 @@ const COORDINATOR_TASK_PERMISSIONS = taskPermissions(
   "pala",
 );
 
-// Disable heavy browser automation MCP on coordinator to save tokens.
-const COORDINATOR_DISABLED_TOOLS: Record<string, string> = {
-  "web-agent-mcp_*": "deny",
-};
-
-// Per-worker MCP restrictions: disable MCPs they don't need.
 function mcpDenyRules(...disabledPrefixes: string[]): Record<string, string> {
   const tools: Record<string, string> = {};
   for (const prefix of disabledPrefixes) {
@@ -82,12 +75,11 @@ export function createHarnessAgents(
   const verifierCandidate = fallbackState.verifier.selectedCandidate;
 
   return {
-    // ── Coordinator (primary agent) ──────────────────────────────
     polat: withOverride(
       {
         mode: "primary",
         description:
-          "Polat — Orchestrator of the harness. Plans, argues, delegates, synthesizes.",
+          "Polat — Orchestrator. Plans, delegates, synthesizes, manages the pipeline.",
         model: coordinatorCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.model,
         variant: coordinatorCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.variant,
         prompt: buildCoordinatorPrompt(
@@ -95,30 +87,22 @@ export function createHarnessAgents(
           workerVisibilityMode,
         ),
         color: "#4A90D9",
-        tools: COORDINATOR_DISABLED_TOOLS,
         permission: { task: COORDINATOR_TASK_PERMISSIONS },
       },
-      sanitizeOverride(overrides.polat),
+      sanitizeOverride(overrides.polat, "polat"),
     ),
 
-    // ── Workers (subagents) ──────────────────────────────────────
     cakir: withOverride(
       {
         mode: "subagent",
         hidden: workersHidden,
         description:
-          "Çakır — Execution lead. Breaks plans into concrete work and routes it to specialists.",
+          "Çakır — Execution lead. Breaks plans into tasks and routes specialists.",
         model: "openai/gpt-5.4",
         variant: "high",
         prompt: buildExecutionLeadPrompt(overrides.cakir?.prompt_append),
         temperature: 0.3,
         color: "#3498DB",
-        tools: mcpDenyRules(
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
         permission: {
           task: taskPermissions(
             "memati",
@@ -142,13 +126,12 @@ export function createHarnessAgents(
       {
         mode: "subagent",
         hidden: workersHidden,
-        description: "Memati — Implementer. Delivers production code for the spec.",
+        description: "Memati — Implementer. Delivers production code.",
         model: "openai/gpt-5.4",
         variant: "high",
         prompt: buildImplementerPrompt(overrides.memati?.prompt_append),
         temperature: 0.2,
         color: "#2ECC71",
-        tools: mcpDenyRules("web-agent-mcp"),
       },
       overrides.memati,
     ),
@@ -157,18 +140,13 @@ export function createHarnessAgents(
       {
         mode: "subagent",
         hidden: workersHidden,
-        description: "Abdülhey — Researcher for docs, APIs, and rationale.",
+        description: "Abdülhey — Researcher for docs, APIs, rationale.",
         model: "openai/gpt-5.4",
         variant: "none",
         prompt: buildResearcherPrompt(overrides.abdulhey?.prompt_append),
         temperature: 0.3,
         color: "#F39C12",
-        tools: mcpDenyRules(
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
+        tools: mcpDenyRules("context7"),
       },
       overrides.abdulhey,
     ),
@@ -178,19 +156,13 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description:
-          "Aslan Akbey — Senior reviewer who inspects correctness and conventions.",
+          "Aslan Akbey — Senior reviewer. Correctness, maintainability.",
         model: "openai/gpt-5.4",
         variant: "xhigh",
         prompt: buildReviewerPrompt(overrides["aslan-akbey"]?.prompt_append),
         temperature: 0.1,
         color: "#E74C3C",
-        tools: mcpDenyRules(
-          "websearch",
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
+        tools: mcpDenyRules("websearch"),
         permission: {
           edit: "deny",
           bash: { "*": "deny" },
@@ -204,19 +176,13 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description:
-          "İskender — Adversarial reviewer. Critically challenges assumptions and failure cases.",
+          "İskender — Adversarial reviewer. Security, race conditions, misuse.",
         model: "openai/gpt-5.4",
         variant: "xhigh",
         prompt: buildAdversarialReviewerPrompt(overrides.iskender?.prompt_append),
         temperature: 0.4,
         color: "#9B59B6",
-        tools: mcpDenyRules(
-          "websearch",
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
+        tools: mcpDenyRules("websearch"),
         permission: {
           edit: "deny",
           bash: { "*": "deny" },
@@ -235,11 +201,7 @@ export function createHarnessAgents(
         prompt: buildRepairPrompt(overrides.tuncay?.prompt_append),
         temperature: 0.1,
         color: "#E67E22",
-        tools: mcpDenyRules(
-          "websearch",
-          "grep_app",
-          "web-agent-mcp",
-        ),
+        tools: mcpDenyRules("websearch"),
       },
       overrides.tuncay,
     ),
@@ -254,17 +216,9 @@ export function createHarnessAgents(
         prompt: buildVerifierPrompt(overrides.halit?.prompt_append),
         temperature: 0.0,
         color: "#95A5A6",
-        tools: mcpDenyRules(
-          "context7",
-          "websearch",
-          "grep_app",
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
+        tools: mcpDenyRules("context7", "websearch"),
       },
-      sanitizeOverride(overrides.halit),
+      sanitizeOverride(overrides.halit, "halit"),
     ),
 
     "gullu-erhan": withOverride(
@@ -272,13 +226,12 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description:
-          "Güllü Erhan — Frontend specialist with browser automation.",
+          "Güllü Erhan — Frontend specialist.",
         model: "openai/gpt-5.4",
         variant: "high",
         prompt: buildUiDeveloperPrompt(overrides["gullu-erhan"]?.prompt_append),
         temperature: 0.5,
         color: "#FF69B4",
-        tools: mcpDenyRules("pg-mcp", "ssh-mcp", "mariadb"),
       },
       overrides["gullu-erhan"],
     ),
@@ -293,15 +246,7 @@ export function createHarnessAgents(
         prompt: buildRepoScoutPrompt(overrides["laz-ziya"]?.prompt_append),
         temperature: 0.1,
         color: "#1ABC9C",
-        tools: mcpDenyRules(
-          "context7",
-          "websearch",
-          "grep_app",
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
+        tools: mcpDenyRules("context7", "websearch"),
       },
       overrides["laz-ziya"],
     ),
@@ -311,21 +256,13 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description:
-          "Pala — Chaos tester specializing in edge cases and failure injection.",
+          "Pala — Chaos tester. Edge cases, misuse, race hunting.",
         model: "openai/gpt-5.4",
         variant: "high",
         prompt: buildChaosTesterPrompt(overrides.pala?.prompt_append),
         temperature: 0.45,
         color: "#8E44AD",
-        tools: mcpDenyRules(
-          "context7",
-          "websearch",
-          "grep_app",
-          "web-agent-mcp",
-          "pg-mcp",
-          "ssh-mcp",
-          "mariadb",
-        ),
+        tools: mcpDenyRules("context7", "websearch"),
         permission: {
           edit: "deny",
         },
@@ -333,7 +270,6 @@ export function createHarnessAgents(
       overrides.pala,
     ),
 
-    // ── Disable OpenCode built-in agents ─────────────────────────
     build: { disable: true },
     plan: { disable: true },
   };

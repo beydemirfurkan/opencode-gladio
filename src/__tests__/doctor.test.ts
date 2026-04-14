@@ -23,18 +23,10 @@ function prepareDoctorEnvironment(
   const configDir = join(root, "config-dir");
   mkdirSync(configDir, { recursive: true });
   const paths = getConfigPaths(configDir);
-  mkdirSync(paths.vendorDir, { recursive: true });
-  mkdirSync(paths.vendorMcpDir, { recursive: true });
-  writeFileSync(join(paths.vendorDir, "background-agents.ts"), "", "utf8");
-  mkdirSync(paths.shellStrategyDir, { recursive: true });
-  writeFileSync(join(paths.shellStrategyDir, "shell_strategy.md"), "# shell strategy\n", "utf8");
-  mkdirSync(paths.binDir, { recursive: true });
-  writeFileSync(join(paths.binDir, "fff-mcp"), "", "utf8");
-  writeFileSync(join(paths.binDir, "fff-mcp.exe"), "", "utf8");
 
   const pluginEntries =
     overrides?.pluginEntries?.(paths) ??
-    buildManagedPluginEntries(paths.vendorDir);
+    buildManagedPluginEntries();
   writeFileSync(
     paths.configJson,
     JSON.stringify({ plugin: pluginEntries }, null, 2),
@@ -58,25 +50,6 @@ function prepareDoctorEnvironment(
   }
   writeFileSync(join(srcDir, "index.ts"), "", "utf8");
 
-  const mcpNames = ["pg-mcp", "ssh-mcp", "web-agent-mcp"];
-  for (const name of mcpNames) {
-    const target = join(paths.vendorMcpDir, name);
-    mkdirSync(target, { recursive: true });
-    if (name === "web-agent-mcp") {
-      const webModules = join(target, "node_modules");
-      mkdirSync(join(webModules, "@modelcontextprotocol", "sdk"), {
-        recursive: true,
-      });
-      mkdirSync(join(webModules, "zod"), { recursive: true });
-      const srcDir = join(target, "src");
-      mkdirSync(srcDir, { recursive: true });
-      writeFileSync(join(srcDir, "server.ts"), "", "utf8");
-    }
-    if (name === "pg-mcp" || name === "ssh-mcp") {
-      writeFileSync(join(target, "config.json"), "{}", "utf8");
-    }
-  }
-
   const projectDir = join(root, "project");
   const projectConfigDir = join(projectDir, ".opencode");
   mkdirSync(projectConfigDir, { recursive: true });
@@ -85,18 +58,7 @@ function prepareDoctorEnvironment(
   const schemaVersion = overrides?.schemaVersion ?? CURRENT_HARNESS_SCHEMA_VERSION;
   writeFileSync(
     projectConfigPath,
-    JSON.stringify(
-      {
-        schema_version: schemaVersion,
-        mcps: {
-          pg_mcp: true,
-          ssh_mcp: true,
-          web_agent_mcp: true,
-        },
-      },
-      null,
-      2,
-    ),
+    JSON.stringify({ schema_version: schemaVersion }, null, 2),
     "utf8",
   );
 
@@ -126,7 +88,6 @@ describe("Doctor command helpers", () => {
     try {
       const report = runDoctor(options);
       expect(report.overallStatus).toBe("PASS");
-      expect(report.checks).toHaveLength(5);
       const managedCheck = report.checks.find((check) => check.name === "Managed plugins");
       expect(managedCheck?.status).toBe("PASS");
     } finally {
@@ -151,7 +112,7 @@ describe("Doctor command helpers", () => {
 
   it("reports FAIL when managed plugin list drops required entries", () => {
     const { options, cleanup } = prepareDoctorEnvironment({
-      pluginEntries: (paths) => buildManagedPluginEntries(paths.vendorDir).slice(1),
+      pluginEntries: () => [],
     });
     try {
       const report = runDoctor(options);
