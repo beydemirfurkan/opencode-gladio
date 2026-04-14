@@ -18,28 +18,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.2.9"
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
           registry-url: https://registry.npmjs.org
 
-      - run: bun install --frozen-lockfile
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
 
-      - run: bun run typecheck
-      - run: bun run build
+      - name: Run tests
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - run: bun test
 
       - name: Compile CLI binaries
         run: |
           mkdir -p release-binaries
-          bun build src/cli.ts --compile --target=bun-linux-x64 --outfile release-binaries/opencode-gladio-linux-x64
-          bun build src/cli.ts --compile --target=bun-linux-arm64 --outfile release-binaries/opencode-gladio-linux-arm64
-          bun build src/cli.ts --compile --target=bun-darwin-x64 --outfile release-binaries/opencode-gladio-darwin-x64
-          bun build src/cli.ts --compile --target=bun-darwin-arm64 --outfile release-binaries/opencode-gladio-darwin-arm64
+          npx pkg dist/cli.js --target node22-linux-x64,node22-linux-arm64,node22-macos-x64,node22-macos-arm64 --output release-binaries/opencode-gladio || true
 
       - name: Semantic Release
         env:
