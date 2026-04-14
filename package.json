@@ -1,6 +1,6 @@
 {
   "name": "opencode-gladio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Disciplined orchestration plugin for OpenCode. Automatic 4-tier workflow pipeline, dual parallel review, runtime model fallback, multiplexer support.",
   "type": "module",
   "main": "dist/index.js",
