@@ -55,31 +55,6 @@ const tmux: MultiplexerCommand = {
   },
 };
 
-const zellij: MultiplexerCommand = {
-  name: "zellij",
-
-  async hasSession(sessionName: string): Promise<boolean> {
-    try {
-      const output = await run("zellij", ["list-sessions"]);
-      return output.split("\n").some((line) => line.startsWith(sessionName));
-    } catch {
-      return false;
-    }
-  },
-
-  async createPane(_sessionName: string, _title: string): Promise<void> {
-    console.warn("[opencode-gladio] Zellij pane creation not yet implemented");
-  },
-
-  async killPane(_sessionName: string, _paneId: string): Promise<void> {
-    console.warn("[opencode-gladio] Zellij pane kill not yet implemented");
-  },
-
-  async listPanes(_sessionName: string): Promise<Array<{ id: string; title: string }>> {
-    return [];
-  },
-};
-
 function run(command: string, args: string[]): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -104,15 +79,8 @@ export function getMultiplexer(
   config: MultiplexerConfig,
 ): MultiplexerCommand | null {
   if (config.type === "none" || !config.type) return null;
-
-  switch (config.type) {
-    case "tmux":
-      return tmux;
-    case "zellij":
-      return zellij;
-    default:
-      return null;
-  }
+  if (config.type === "tmux") return tmux;
+  return null;
 }
 
 export function isMultiplexerAvailable(

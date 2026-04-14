@@ -63,7 +63,7 @@ export type AgentOverride = {
 };
 
 export type MultiplexerConfig = {
-  type?: "none" | "tmux" | "zellij";
+  type?: "none" | "tmux";
   layout?: "main-horizontal" | "main-vertical" | "tiled";
   main_pane_size?: number;
 };

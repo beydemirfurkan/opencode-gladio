@@ -1,6 +1,7 @@
 import type { HookRuntime } from "./runtime";
 import { resolveSessionOrEntityID } from "./runtime";
 import { getPruningRules } from "../token-manager";
+import { compressRawOutput } from "../protocol";
 
 export function createPreCompactHook(runtime: HookRuntime) {
   return {
@@ -17,8 +18,13 @@ export function createPreCompactHook(runtime: HookRuntime) {
       runtime.tokenManager.markCompacted(sessionID);
 
       if (output?.context) {
+        const budget = report.budget;
+        const overhead = report.budgetPercentUsed > 80
+          ? "CRITICAL: Budget nearly exhausted. Aggressively prune."
+          : `Budget: ${report.budgetPercentUsed}% used (${report.estimatedTokens}/${budget.compactThreshold}).`;
+
         output.context.push(
-          `[TokenManager] Pre-compact state: ${report.estimatedTokens} tokens used, ${report.budgetPercentUsed}% of budget. Tool count: ${report.toolCount}.`,
+          `[Compact] ${overhead} Tools: ${report.toolCount}.`,
         );
 
         const rules = getPruningRules();
@@ -26,12 +32,18 @@ export function createPreCompactHook(runtime: HookRuntime) {
           .map((rule) => `  ${rule.priority}. ${rule.description}`)
           .join("\n");
         output.context.push(
-          `[TokenManager] Pruning priorities (apply in order):\n${ruleDescriptions}`,
+          `[Compact] Pruning priorities:\n${ruleDescriptions}`,
         );
+
+        if (report.budgetPercentUsed > 60) {
+          output.context.push(
+            "[Compact] Compress verbose tool outputs using this pattern: keep first 3 and last 2 lines, replace middle with `[${N} lines compressed]`.",
+          );
+        }
       }
 
       if (output?.prompt) {
-        output.prompt += "\n\nPreserve the most recent tool outputs and user messages. Prioritize dropping old repeated file reads and truncating verbose tool outputs older than 10 tool-calls.";
+        output.prompt += "\n\nPreserve recent tool outputs and user messages. Drop old repeated file reads. Truncate verbose outputs older than 10 tool-calls to summaries.";
       }
     },
   };

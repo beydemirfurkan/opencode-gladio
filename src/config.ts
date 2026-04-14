@@ -102,7 +102,7 @@ export const HarnessConfigSchema = z.object({
     .optional(),
   multiplexer: z
     .object({
-      type: z.enum(["none", "tmux", "zellij"]).optional(),
+      type: z.enum(["none", "tmux"]).optional(),
       layout: z.enum(["main-horizontal", "main-vertical", "tiled"]).optional(),
       main_pane_size: z.number().int().positive().optional(),
     })
