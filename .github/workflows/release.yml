@@ -28,17 +28,11 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
 
-      - name: Run tests
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - run: bun test
-
-      - name: Compile CLI binaries
-        run: |
-          mkdir -p release-binaries
-          npx pkg dist/cli.js --target node22-linux-x64,node22-linux-arm64,node22-macos-x64,node22-macos-arm64 --output release-binaries/opencode-gladio || true
 
       - name: Semantic Release
         env:
