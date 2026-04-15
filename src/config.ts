@@ -113,6 +113,14 @@ export const HarnessConfigSchema = z.object({
       main_pane_size: z.number().int().positive().optional(),
     })
     .optional(),
+  memory: z
+    .object({
+      enabled: z.boolean().optional(),
+      dir: z.string().optional(),
+      max_learnings: z.number().int().positive().optional(),
+      inject_summary: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 const DEFAULTS: HarnessConfig = {
@@ -157,6 +165,12 @@ const DEFAULTS: HarnessConfig = {
     layout: "main-vertical",
     main_pane_size: 60,
   },
+  memory: {
+    enabled: true,
+    dir: ".gladio",
+    max_learnings: 100,
+    inject_summary: true,
+  },
 };
 
 const ConfigSectionSchemas = {
@@ -170,6 +184,7 @@ const ConfigSectionSchemas = {
   agents: HarnessConfigSchema.shape.agents,
   fallbacks: HarnessConfigSchema.shape.fallbacks,
   multiplexer: HarnessConfigSchema.shape.multiplexer,
+  memory: HarnessConfigSchema.shape.memory,
 } satisfies Record<keyof HarnessConfig, z.ZodTypeAny>;
 
 function formatParseErrors(errors: ParseError[]): string {
@@ -438,5 +453,11 @@ export const SAMPLE_PROJECT_CONFIG = `{
     "layout": "main-vertical",
     "main_pane_size": 60
   },
-  "agents": {}
+  "agents": {},
+  "memory": {
+    "enabled": true,
+    "dir": ".gladio",
+    "max_learnings": 100,
+    "inject_summary": true
+  }
 }`;

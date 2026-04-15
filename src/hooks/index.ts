@@ -1,5 +1,6 @@
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { HarnessConfig } from "../types";
+import type { MemoryStore } from "../memory";
 import { createPostToolUseHook } from "./post-tool-use";
 import { createPreToolUseHook } from "./pre-tool-use";
 import { createHookRuntime, resolveHookProfile } from "./runtime";
@@ -117,10 +118,10 @@ function composeSessionIdle(hooks: HookRecord[]) {
   };
 }
 
-export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig) {
+export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig, memory?: MemoryStore) {
   const hooks: HookRecord[] = [];
   const profile = resolveHookProfile(config);
-  const runtime = createHookRuntime(ctx, config);
+  const runtime = createHookRuntime(ctx, config, memory);
 
   const registerHook = (name: string, enabled: boolean, factory: () => HookRecord) => {
     if (!enabled) return;
@@ -140,9 +141,9 @@ export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig
   registerHook("todo_continuation", config.hooks?.todo_continuation !== false, () =>
     createTodoContinuationHook(config, runtime),
   );
-  registerHook("stop", config.hooks?.stop !== false, () => createStopHook(ctx, runtime));
+  registerHook("stop", config.hooks?.stop !== false, () => createStopHook(ctx, config, runtime));
   registerHook("session_end", config.hooks?.session_end !== false, () =>
-    createSessionEndHook(runtime),
+    createSessionEndHook(config, runtime),
   );
   registerHook("system_prompt", true, () => createSystemPromptHook(runtime));
   registerHook("phase_reminder", config.hooks?.phase_reminder !== false, () =>

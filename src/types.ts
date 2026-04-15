@@ -71,6 +71,13 @@ export type HooksConfig = {
   chat_headers?: boolean;
 };
 
+export type MemoryConfig = {
+  enabled?: boolean;
+  dir?: string;
+  max_learnings?: number;
+  inject_summary?: boolean;
+};
+
 export type HarnessConfig = {
   schema_version?: number;
   default_mode?: HarnessMode;
@@ -84,6 +91,7 @@ export type HarnessConfig = {
   agents?: Record<string, AgentOverride>;
   fallbacks?: FallbacksConfig;
   multiplexer?: MultiplexerConfig;
+  memory?: MemoryConfig;
 };
 
 export type AgentLike = Record<string, unknown>;

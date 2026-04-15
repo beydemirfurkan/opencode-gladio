@@ -13,6 +13,11 @@ import {
   formatDoctorReport,
   runDoctor,
 } from "./doctor";
+import { MemoryStore, resolveMemoryConfig } from "./memory";
+
+type MemoryCommandOptions = {
+  json?: boolean;
+};
 
 function printHelp(): void {
   console.log(`opencode-gladio
@@ -26,6 +31,9 @@ Commands:
   install                Install plugin stack into the active OpenCode config
   fresh-install          Delete non-config files, then reinstall the stack
   uninstall              Remove harness-managed wiring and keep user config files
+  memory show [--json]   Show persisted Gladio memory for this project
+  memory forget <id>     Delete one saved learning by id
+  memory reset           Delete all saved learnings for this project
   print-config           Print the snippet to add into opencode.json
 `);
 }
@@ -72,6 +80,105 @@ function showConfig(options?: { json?: boolean; sources?: boolean }): void {
   console.log(formatConfigShowText(resolved, {
     includeSources: options?.sources,
   }));
+}
+
+export function createCliMemoryStore(projectDirectory: string = process.cwd()): MemoryStore {
+  const resolved = loadResolvedHarnessConfig(projectDirectory);
+  return new MemoryStore(projectDirectory, resolveMemoryConfig(resolved.effectiveConfig));
+}
+
+export function formatMemoryShowText(memory: MemoryStore): string {
+  const context = memory.loadContext();
+  const pipeline = memory.loadPipelineState();
+  const project = memory.loadProjectFacts();
+
+  const lines: string[] = [];
+  lines.push(`Memory directory: ${memory.getDirectory()}`);
+  lines.push(`Learnings: ${context.learnings.length}`);
+
+  if (pipeline.last_session) {
+    lines.push(
+      `Last session: ${pipeline.last_session.status} | phase=${pipeline.last_session.phase} | tier=${pipeline.last_session.tier}`,
+    );
+  } else {
+    lines.push("Last session: none");
+  }
+
+  lines.push(
+    `Project facts: packageManager=${project.facts.package_manager}, languages=${project.facts.languages.join(", ") || "none"}, frameworks=${project.facts.frameworks.join(", ") || "none"}`,
+  );
+
+  if (context.learnings.length > 0) {
+    lines.push("Learnings:");
+    for (const learning of context.learnings) {
+      lines.push(
+        `- ${learning.id} [${learning.category}] conf=${learning.confidence} ${learning.content}`,
+      );
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function showMemory(options?: MemoryCommandOptions): void {
+  const memory = createCliMemoryStore();
+
+  if (!memory.isEnabled()) {
+    console.log("Gladio memory is disabled for this project.");
+    return;
+  }
+
+  if (options?.json) {
+    console.log(
+      JSON.stringify(
+        {
+          directory: memory.getDirectory(),
+          context: memory.loadContext(),
+          pipeline: memory.loadPipelineState(),
+          project: memory.loadProjectFacts(),
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+
+  console.log(formatMemoryShowText(memory));
+}
+
+function forgetMemory(id: string | undefined): void {
+  if (!id) {
+    console.error("Missing learning id. Usage: opencode-gladio memory forget <id>");
+    process.exitCode = 1;
+    return;
+  }
+
+  const memory = createCliMemoryStore();
+  if (!memory.isEnabled()) {
+    console.log("Gladio memory is disabled for this project.");
+    return;
+  }
+
+  const removed = memory.removeLearning(id);
+  if (!removed) {
+    console.error(`Learning not found: ${id}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`Removed learning ${id}`);
+}
+
+function resetMemory(): void {
+  const memory = createCliMemoryStore();
+  if (!memory.isEnabled()) {
+    console.log("Gladio memory is disabled for this project.");
+    return;
+  }
+
+  const deleted = memory.clearLearnings();
+  console.log(`Cleared ${deleted} learning${deleted === 1 ? "" : "s"}.`);
 }
 
 export function collectOptionArgs(
@@ -127,6 +234,26 @@ export function main(argv: string[]): void {
       process.exitCode = exitCode;
     }
     return;
+  }
+
+  if (command === "memory" || command === "context") {
+    const subcommand = arg;
+    const optionArgs = collectOptionArgs(undefined, restArgs);
+
+    if (subcommand === "show") {
+      showMemory({ json: optionArgs.includes("--json") });
+      return;
+    }
+
+    if (subcommand === "forget") {
+      forgetMemory(restArgs[0]);
+      return;
+    }
+
+    if (subcommand === "reset") {
+      resetMemory();
+      return;
+    }
   }
 
   if (command === "install") {

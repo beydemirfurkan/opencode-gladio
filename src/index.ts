@@ -5,10 +5,23 @@ import { createHarnessMcps } from "./mcp";
 import { createHarnessCommands } from "./commands";
 import { createHarnessHooks } from "./hooks";
 import { ForegroundFallbackManager } from "./fallback-manager";
+import { MemoryStore, isMemoryEnabled, resolveMemoryConfig } from "./memory";
+import { createMemoryTools } from "./tools";
 
 const OpenCodeGladioPlugin: Plugin = async (ctx) => {
   const harnessConfig = loadHarnessConfig(ctx.directory);
-  const hooks = await createHarnessHooks(ctx, harnessConfig);
+
+  let memory: MemoryStore | undefined;
+  let memoryTools: ReturnType<typeof createMemoryTools> | undefined;
+
+  if (isMemoryEnabled(harnessConfig)) {
+    const memConfig = resolveMemoryConfig(harnessConfig);
+    memory = new MemoryStore(ctx.directory, memConfig);
+    memory.ensureDirectory();
+    memoryTools = createMemoryTools(memory);
+  }
+
+  const hooks = await createHarnessHooks(ctx, harnessConfig, memory);
   const fallbackManager = new ForegroundFallbackManager(
     ctx.client,
     harnessConfig.fallbacks?.chains ?? {},
@@ -58,6 +71,12 @@ const OpenCodeGladioPlugin: Plugin = async (ctx) => {
           "experimental.chat.system.transform": hooks["experimental.chat.system.transform"],
         }
       : {}),
+    ...(hooks["experimental.chat.messages.transform"]
+      ? {
+          "experimental.chat.messages.transform": hooks["experimental.chat.messages.transform"],
+        }
+      : {}),
+    ...(memoryTools ? { tool: memoryTools } : {}),
   };
 };
 

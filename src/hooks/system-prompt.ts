@@ -1,6 +1,8 @@
 import type { HookRuntime } from "./runtime";
 
 export function createSystemPromptHook(runtime: HookRuntime) {
+  const memory = runtime.getMemory();
+
   return {
     "experimental.chat.system.transform": async (
       input: { sessionID?: string },
@@ -13,7 +15,8 @@ export function createSystemPromptHook(runtime: HookRuntime) {
       const factsLine = runtime.buildProjectFactsLine();
       const modeLine = runtime.buildModeInjection();
       const tierReminder = "[Pipeline] ClarityGate→Tier→Execute. Ambiguous? Ask first. Clear? \"Tier N because: <reason>\" → act.";
-      const injection = [factsLine, modeLine, tierReminder].filter(Boolean).join("\n\n");
+      const memoryLine = memory ? memory.buildInjectionLine() : "";
+      const injection = [factsLine, modeLine, tierReminder, memoryLine].filter(Boolean).join("\n\n");
       if (!injection) return;
       output.system[0] = output.system[0] ? `${injection}\n\n${output.system[0]}` : injection;
     },

@@ -22,14 +22,28 @@ function detectProjectDocs(directory: string): string[] {
 
 export function createSessionStartHook(
   ctx: PluginInput,
-  _config: HarnessConfig,
+  config: HarnessConfig,
   runtime: HookRuntime,
 ) {
+  const memory = runtime.getMemory();
+
   return {
     "session.created": async (input?: unknown): Promise<void> => {
       const sessionID = resolveSessionOrEntityID(input);
       if (!sessionID) return;
       runtime.prepareSessionContext(sessionID);
+
+      if (memory && config.memory?.enabled !== false) {
+        memory.ensureDirectory();
+        const facts = runtime.getProjectFacts();
+        memory.saveProjectFacts({
+          languages: facts.languages,
+          frameworks: facts.frameworks,
+          package_manager: facts.packageManager,
+          test_runner: "unknown",
+          build_tool: "unknown",
+        });
+      }
     },
     "chat.message": async (input: ChatMessageInput, output: ChatMessageOutput): Promise<void> => {
       const agentName = input.agent ?? (typeof output.message.agent === "string" ? output.message.agent : undefined);
@@ -38,6 +52,10 @@ export function createSessionStartHook(
       const factsLine = runtime.buildProjectFactsLine();
       const docs = detectProjectDocs(ctx.directory);
       const docsLine = docs.length > 0 ? `[ProjectDocs] Available: ${docs.join(", ")}` : "";
+
+      const memoryLine = memory && config.memory?.inject_summary !== false
+        ? memory.buildInjectionLine()
+        : "";
 
       if (agentName && !PRIMARY_AGENTS.has(agentName)) {
         const previousSystem = typeof output.message.system === "string" ? output.message.system.trim() : "";
@@ -48,7 +66,7 @@ export function createSessionStartHook(
 
       const modeInjection = runtime.buildModeInjection();
       const previousSystem = typeof output.message.system === "string" ? output.message.system.trim() : "";
-      const injection = [modeInjection, docsLine].filter(Boolean).join("\n\n");
+      const injection = [modeInjection, docsLine, memoryLine].filter(Boolean).join("\n\n");
       if (injection) {
         output.message.system = previousSystem ? `${previousSystem}\n\n${injection}` : injection;
       }

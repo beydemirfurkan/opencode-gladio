@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { HarnessConfig, HookProfile, HooksConfig } from "../types";
+import type { MemoryStore } from "../memory";
 import { readText } from "../utils";
 import {
   detectProjectFacts,
@@ -105,7 +106,7 @@ export function resolveToolArgs(value: unknown): Record<string, unknown> {
     : {};
 }
 
-export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
+export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig, memory?: MemoryStore) {
   const sessions = new Map<string, SessionState>();
   const projectFacts = detectProjectFacts(ctx.directory);
   const projectID = estimateKey(ctx.directory);
@@ -226,6 +227,7 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
       ensureSession(sessionID).lastNudge = nudge;
     },
     getLastNudge: (sessionID: string) => sessions.get(sessionID)?.lastNudge,
+    getMemory: () => memory,
   };
 }
 

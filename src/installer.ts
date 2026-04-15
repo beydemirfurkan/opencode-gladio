@@ -156,6 +156,18 @@ async function ensureInstalledHarnessBuild(configDir: string): Promise<void> {
   });
 }
 
+function ensureGitignore(projectDir: string): void {
+  const gitignorePath = join(projectDir, ".gitignore");
+  const gladioEntry = ".gladio/";
+  let content = "";
+  if (existsSync(gitignorePath)) {
+    content = readFileSync(gitignorePath, "utf8");
+    if (content.includes(gladioEntry)) return;
+    if (!content.endsWith("\n")) content += "\n";
+  }
+  writeFileSync(gitignorePath, `${content}${gladioEntry}\n`, "utf8");
+}
+
 export async function installHarness(_options?: { fresh?: boolean }): Promise<{
   configPath: string;
   packageJsonPath: string;
@@ -169,6 +181,7 @@ export async function installHarness(_options?: { fresh?: boolean }): Promise<{
   const packageJsonPath = updatePackageJson(paths);
   await runBunInstall(configDir);
   await ensureInstalledHarnessBuild(configDir);
+  ensureGitignore(process.cwd());
   return { configPath, packageJsonPath, harnessConfigPath: paths.harnessConfig };
 }
 
