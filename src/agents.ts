@@ -14,7 +14,6 @@ import {
   buildUiDeveloperPrompt,
   buildRepoScoutPrompt,
 } from "./prompts/workers";
-import { DEFAULT_PRIMARY_CANDIDATES, resolveFallbackState } from "./fallbacks";
 
 function withOverride(
   base: AgentLike,
@@ -24,15 +23,17 @@ function withOverride(
   return deepMerge(base, override);
 }
 
-function sanitizeOverride(override?: AgentOverride, agentName?: string): AgentOverride | undefined {
+function truncateOverridePrompt(
+  override?: AgentOverride,
+  agentName?: string,
+): AgentOverride | undefined {
   if (!override) return undefined;
   const maxPromptChars = agentName ? getAgentBudget(agentName).promptChars : 4000;
-  const { model, variant, ...rest } = override;
-  if (rest.prompt_append) {
-    rest.prompt_append = truncatePromptAppend(rest.prompt_append, maxPromptChars);
+  if (override.prompt_append) {
+    override.prompt_append = truncatePromptAppend(override.prompt_append, maxPromptChars);
   }
-  if (Object.keys(rest).length === 0) return undefined;
-  return rest;
+  if (Object.keys(override).length === 0) return undefined;
+  return override;
 }
 
 function taskPermissions(...allowedPatterns: string[]) {
@@ -70,9 +71,6 @@ export function createHarnessAgents(
   const overrides = config.agents ?? {};
   const workerVisibilityMode = config.ui?.worker_visibility ?? "summary";
   const workersHidden = workerVisibilityMode !== "visible";
-  const fallbackState = resolveFallbackState(config);
-  const coordinatorCandidate = fallbackState.coordinator.selectedCandidate;
-  const verifierCandidate = fallbackState.verifier.selectedCandidate;
 
   return {
     polat: withOverride(
@@ -80,8 +78,6 @@ export function createHarnessAgents(
         mode: "primary",
         description:
           "Polat — Orchestrator. Plans, delegates, synthesizes, manages the pipeline.",
-        model: coordinatorCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.model,
-        variant: coordinatorCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.coordinator.variant,
         prompt: buildCoordinatorPrompt(
           overrides.polat?.prompt_append,
           workerVisibilityMode,
@@ -89,7 +85,7 @@ export function createHarnessAgents(
         color: "#4A90D9",
         permission: { task: COORDINATOR_TASK_PERMISSIONS },
       },
-      sanitizeOverride(overrides.polat, "polat"),
+      overrides.polat,
     ),
 
     cakir: withOverride(
@@ -98,7 +94,6 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Çakır — Execution lead. Breaks plans into tasks and routes specialists.",
-        model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildExecutionLeadPrompt(overrides.cakir?.prompt_append),
         temperature: 0.3,
@@ -127,7 +122,6 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Memati — Implementer. Delivers production code.",
-        model: "openai/gpt-5.4",
         variant: "high",
         prompt: buildImplementerPrompt(overrides.memati?.prompt_append),
         temperature: 0.2,
@@ -141,7 +135,6 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Abdülhey — Researcher for docs, APIs, rationale.",
-        model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildResearcherPrompt(overrides.abdulhey?.prompt_append),
         temperature: 0.3,
@@ -157,7 +150,6 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Aslan Akbey — Senior reviewer. Correctness, maintainability.",
-        model: "openai/gpt-5.4",
         variant: "xhigh",
         prompt: buildReviewerPrompt(overrides["aslan-akbey"]?.prompt_append),
         temperature: 0.1,
@@ -177,7 +169,6 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "İskender — Adversarial reviewer. Security, race conditions, misuse.",
-        model: "openai/gpt-5.4",
         variant: "xhigh",
         prompt: buildAdversarialReviewerPrompt(overrides.iskender?.prompt_append),
         temperature: 0.4,
@@ -196,7 +187,6 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Tuncay — Scoped failure repair agent.",
-        model: "openai/gpt-5.4-mini",
         variant: "high",
         prompt: buildRepairPrompt(overrides.tuncay?.prompt_append),
         temperature: 0.1,
@@ -211,14 +201,13 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Halit — Build and test verifier.",
-        model: verifierCandidate.model ?? DEFAULT_PRIMARY_CANDIDATES.verifier.model,
-        variant: verifierCandidate.variant ?? DEFAULT_PRIMARY_CANDIDATES.verifier.variant,
+        variant: "none",
         prompt: buildVerifierPrompt(overrides.halit?.prompt_append),
         temperature: 0.0,
         color: "#95A5A6",
         tools: mcpDenyRules("context7", "websearch"),
       },
-      sanitizeOverride(overrides.halit, "halit"),
+      overrides.halit,
     ),
 
     "gullu-erhan": withOverride(
@@ -227,7 +216,6 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Güllü Erhan — Frontend specialist.",
-        model: "openai/gpt-5.4",
         variant: "high",
         prompt: buildUiDeveloperPrompt(overrides["gullu-erhan"]?.prompt_append),
         temperature: 0.5,
@@ -241,7 +229,6 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Laz Ziya — Fast codebase explorer.",
-        model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildRepoScoutPrompt(overrides["laz-ziya"]?.prompt_append),
         temperature: 0.1,
@@ -257,7 +244,6 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Pala — Chaos tester. Edge cases, misuse, race hunting.",
-        model: "openai/gpt-5.4-mini",
         variant: "high",
         prompt: buildChaosTesterPrompt(overrides.pala?.prompt_append),
         temperature: 0.45,

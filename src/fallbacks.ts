@@ -24,21 +24,14 @@ export type ResolvedFallbackState = {
   verifier: ResolvedRoleFallback;
 };
 
-const SUPPORTED_CANDIDATES = new Set([
-  "openai/gpt-5.4|xhigh",
-  "openai/gpt-5.4|high",
-  "openai/gpt-5.4|none",
-  "openai/gpt-5.4-mini|none",
-]);
-
 export const DEFAULT_PRIMARY_CANDIDATES: Record<FallbackRole, FallbackCandidate> = {
-  coordinator: { model: "openai/gpt-5.4", variant: "xhigh" },
-  verifier: { model: "openai/gpt-5.4-mini", variant: "none" },
+  coordinator: { variant: "xhigh" },
+  verifier: { variant: "none" },
 };
 
 export const DEFAULT_FALLBACK_CONFIG: Record<FallbackRole, FallbackCandidate[]> = {
-  coordinator: [{ model: "openai/gpt-5.4", variant: "high" }],
-  verifier: [{ model: "openai/gpt-5.4", variant: "none" }],
+  coordinator: [],
+  verifier: [],
 };
 
 function normalizeCandidate(candidate: FallbackCandidate): FallbackCandidate {
@@ -49,17 +42,9 @@ function normalizeCandidate(candidate: FallbackCandidate): FallbackCandidate {
 }
 
 function describeCandidate(candidate: FallbackCandidate): string {
-  const model = candidate.model ?? "<unspecified model>";
+  const model = candidate.model ?? "<default model>";
   const variant = candidate.variant ?? "none";
   return `${model}/${variant}`;
-}
-
-function isCandidateSupported(candidate: FallbackCandidate): boolean {
-  if (!candidate.model) {
-    return false;
-  }
-  const variant = candidate.variant ?? "none";
-  return SUPPORTED_CANDIDATES.has(`${candidate.model}|${variant}`);
 }
 
 function buildPrimaryCandidate(
@@ -105,27 +90,11 @@ function selectCandidateFromChain(chain: FallbackCandidate[]): {
     };
   }
 
-  const supportedIndex = chain.findIndex(isCandidateSupported);
-  if (supportedIndex !== -1) {
-    if (supportedIndex === 0) {
-      return {
-        index: 0,
-        reason: `Primary candidate ${describeCandidate(chain[0])} is supported.`,
-        degraded: false,
-      };
-    }
-
-    return {
-      index: supportedIndex,
-      reason: `Primary candidate ${describeCandidate(chain[0])} is unsupported; using fallback ${describeCandidate(chain[supportedIndex])}.`,
-      degraded: true,
-    };
-  }
-
+  const candidate = chain[0];
   return {
     index: 0,
-    reason: `No compatible candidates found; using primary ${describeCandidate(chain[0])}.`,
-    degraded: true,
+    reason: `Using primary candidate ${describeCandidate(candidate)}.`,
+    degraded: false,
   };
 }
 

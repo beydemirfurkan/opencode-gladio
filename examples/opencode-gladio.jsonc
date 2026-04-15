@@ -7,15 +7,13 @@
   },
   "hooks": {
     "profile": "standard",
-    "comment_guard": false,
     "session_start": true,
     "pre_tool_use": true,
     "post_tool_use": true,
     "pre_compact": true,
     "stop": true,
     "session_end": true,
-    "file_edited": true,
-    "prompt_refiner": false
+    "file_edited": true
   },
   "mcps": {
     "context7": true,
@@ -36,7 +34,7 @@
       "variant": "xhigh"
     },
     "cakir": {
-      "variant": "high"
+      "variant": "none"
     },
     "memati": {
       "variant": "high"

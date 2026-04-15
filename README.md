@@ -86,21 +86,21 @@ Both must pass. If either rejects, **Tuncay** does scoped repairs and the cycle 
 
 ## Agents
 
-| Agent | Role | Model | When |
-|-------|------|-------|------|
-| **Polat** | Coordinator | `gpt-5.4` | Always active |
-| **Çakır** | Execution lead | `gpt-5.4-mini` | Complex decomposition |
-| **Memati** | Implementer | `gpt-5.4` | Tier 2+ |
-| **Abdülhey** | Researcher | `gpt-5.4-mini` | Docs, APIs, evidence |
-| **Aslan Akbey** | Correctness reviewer | `gpt-5.4` | Tier 3+ review |
-| **İskender** | Adversarial reviewer | `gpt-5.4` | Tier 3+ review |
-| **Tuncay** | Repair specialist | `gpt-5.4-mini` | Review rejection |
-| **Halit** | Verifier | `gpt-5.4-mini` | Build/test PASS/FAIL |
-| **Güllü Erhan** | Frontend specialist | `gpt-5.4` | UI/UX tasks |
-| **Laz Ziya** | Explorer | `gpt-5.4-mini` | Fast codebase mapping |
-| **Pala** | Chaos tester | `gpt-5.4-mini` | Tier 4 |
+All agents use your OpenCode default model unless overridden in config.
 
-Fast model agents (mini) handle research, verification, and repair. Full model agents handle implementation, review, and coordination.
+| Agent | Role | Variant | When |
+|-------|------|---------|------|
+| **Polat** | Coordinator | xhigh | Always active |
+| **Çakır** | Execution lead | none | Complex decomposition |
+| **Memati** | Implementer | high | Tier 2+ |
+| **Abdülhey** | Researcher | none | Docs, APIs, evidence |
+| **Aslan Akbey** | Correctness reviewer | xhigh | Tier 3+ review |
+| **İskender** | Adversarial reviewer | xhigh | Tier 3+ review |
+| **Tuncay** | Repair specialist | high | Review rejection |
+| **Halit** | Verifier | none | Build/test PASS/FAIL |
+| **Güllü Erhan** | Frontend specialist | high | UI/UX tasks |
+| **Laz Ziya** | Explorer | none | Fast codebase mapping |
+| **Pala** | Chaos tester | high | Tier 4 |
 
 ## CLI
 
@@ -147,8 +147,8 @@ Automatic model switching on rate limits:
   "fallbacks": {
     "enabled": true,
     "chains": {
-      "polat": ["openai/gpt-5.4", "anthropic/claude-sonnet-4-20250514"],
-      "halit": ["openai/gpt-5.4-mini", "openai/gpt-5.4"]
+      "polat": ["zai/glm-5.1", "anthropic/claude-sonnet-4-20250514"],
+      "halit": ["opencode-go/kimi-k2.5", "zai/glm-5.1"]
     }
   }
 }
@@ -156,13 +156,14 @@ Automatic model switching on rate limits:
 
 ### Agent Overrides
 
-Override any agent's model, variant, or prompt:
+Override any agent's model, variant, or prompt. Works with any provider configured in your OpenCode config:
 
 ```jsonc
 {
   "agents": {
-    "polat": { "variant": "xhigh" },
+    "polat": { "model": "zai/glm-5.1", "variant": "xhigh" },
     "memati": { "model": "anthropic/claude-sonnet-4-20250514" },
+    "halit": { "model": "opencode-go/kimi-k2.5" },
     "abdulhey": {
       "prompt_append": "Always cite sources with URLs."
     }
@@ -210,7 +211,9 @@ Three remote MCP servers are available (all enabled by default):
   "fallbacks": { "enabled": true, "chains": {} },
   "multiplexer": { "type": "none" },
   "agents": {
-    "polat": { "variant": "xhigh" }
+    "polat": { "model": "zai/glm-5.1", "variant": "xhigh" },
+    "memati": { "model": "anthropic/claude-sonnet-4-20250514" },
+    "halit": { "model": "opencode-go/kimi-k2.5" }
   }
 }
 ```
