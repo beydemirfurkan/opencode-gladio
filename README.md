@@ -1,20 +1,34 @@
-<p align="center">
-  <strong>opencode-gladio</strong>
-</p>
+<div align="center">
 
-<p align="center">
-  Disciplined orchestration plugin for <a href="https://opencode.ai">OpenCode</a>.<br>
-  One coordinator. Ten specialists. Automatic 4-tier pipeline. Zero ambiguity.
-</p>
+# ⚔️ opencode-gladio
 
-<p align="center">
-  <img src="https://img.shields.io/npm/v/opencode-gladio?color=blue&label=npm" alt="npm" />
-  <img src="https://img.shields.io/npm/dt/opencode-gladio?color=green" alt="downloads" />
-  <img src="https://img.shields.io/github/license/beydemirfurkan/opencode-gladio" alt="license" />
-  <img src="https://img.shields.io/node/v/opencode-gladio" alt="node" />
-</p>
+**Disciplined orchestration plugin for [OpenCode](https://opencode.ai)**
+
+One coordinator. Ten specialists. Automatic 4-tier pipeline. Zero ambiguity.
+
+[![npm version](https://img.shields.io/npm/v/opencode-gladio?color=blue&label=npm&style=flat-square)](https://www.npmjs.com/package/opencode-gladio)
+[![npm downloads](https://img.shields.io/npm/dt/opencode-gladio?color=green&style=flat-square)](https://www.npmjs.com/package/opencode-gladio)
+[![license](https://img.shields.io/github/license/beydemirfurkan/opencode-gladio?style=flat-square)](https://github.com/beydemirfurkan/opencode-gladio/blob/main/LICENSE)
+[![node](https://img.shields.io/node/v/opencode-gladio?style=flat-square)](https://nodejs.org)
+
+</div>
 
 ---
+
+## Install
+
+```bash
+npx opencode-gladio install
+```
+
+or install globally:
+
+```bash
+npm i -g opencode-gladio
+opencode-gladio install
+```
+
+That's it. Open OpenCode and start working. Polat (the coordinator) handles the rest.
 
 ## Philosophy
 
@@ -23,14 +37,6 @@ Other orchestration plugins give you flexibility. Gladio gives you **discipline*
 Every task passes through a forced pipeline: ambiguity check → tier classification → worker chain → verification. No skipped steps. No guessing. No "I'll just do it all myself."
 
 **The trade-off:** More overhead on trivial tasks. **The payoff:** Correct, reviewed, verified results on everything else.
-
-## Quick Start
-
-```bash
-npx opencode-gladio install
-```
-
-That's it. Open OpenCode and start working. Polat (the coordinator) handles the rest.
 
 ## How It Works
 
@@ -86,21 +92,21 @@ Both must pass. If either rejects, **Tuncay** does scoped repairs and the cycle 
 
 ## Agents
 
-All agents use your OpenCode default model unless overridden in config.
+All agents use your OpenCode default model. Override per-agent via config.
 
 | Agent | Role | Variant | When |
 |-------|------|---------|------|
-| **Polat** | Coordinator | high | Always active |
-| **Çakır** | Execution lead | none | Complex decomposition |
-| **Memati** | Implementer | high | Tier 2+ |
-| **Abdülhey** | Researcher | none | Docs, APIs, evidence |
-| **Aslan Akbey** | Correctness reviewer | high | Tier 3+ review |
-| **İskender** | Adversarial reviewer | high | Tier 3+ review |
-| **Tuncay** | Repair specialist | high | Review rejection |
-| **Halit** | Verifier | none | Build/test PASS/FAIL |
-| **Güllü Erhan** | Frontend specialist | high | UI/UX tasks |
-| **Laz Ziya** | Explorer | none | Fast codebase mapping |
-| **Pala** | Chaos tester | high | Tier 4 |
+| **Polat** | Coordinator | `high` | Always active |
+| **Çakır** | Execution lead | `none` | Complex decomposition |
+| **Memati** | Implementer | `high` | Tier 2+ |
+| **Abdülhey** | Researcher | `none` | Docs, APIs, evidence |
+| **Aslan Akbey** | Correctness reviewer | `high` | Tier 3+ review |
+| **İskender** | Adversarial reviewer | `high` | Tier 3+ review |
+| **Tuncay** | Repair specialist | `high` | Review rejection |
+| **Halit** | Verifier | `none` | Build/test PASS/FAIL |
+| **Güllü Erhan** | Frontend specialist | `high` | UI/UX tasks |
+| **Laz Ziya** | Explorer | `none` | Fast codebase mapping |
+| **Pala** | Chaos tester | `high` | Tier 4 |
 
 ## CLI
 
@@ -116,7 +122,8 @@ opencode-gladio print-config     # Print resolved config
 
 Config file: `~/.config/opencode/opencode-gladio.jsonc`
 
-JSON Schema autocomplete:
+<details>
+<summary><strong>JSON Schema</strong> — autocomplete in your editor</summary>
 
 ```json
 {
@@ -124,11 +131,10 @@ JSON Schema autocomplete:
 }
 ```
 
-### Minimal
+</details>
 
-Works out of the box. No config needed.
-
-### Worker Visibility
+<details>
+<summary><strong>Worker Visibility</strong></summary>
 
 ```jsonc
 {
@@ -138,9 +144,10 @@ Works out of the box. No config needed.
 }
 ```
 
-### Model Fallback
+</details>
 
-Automatic model switching on rate limits:
+<details>
+<summary><strong>Model Fallback</strong> — auto-switch on rate limits</summary>
 
 ```jsonc
 {
@@ -154,9 +161,12 @@ Automatic model switching on rate limits:
 }
 ```
 
-### Agent Overrides
+</details>
 
-Override any agent's model, variant, or prompt. Works with any provider configured in your OpenCode config:
+<details>
+<summary><strong>Agent Overrides</strong> — model, variant, or prompt per agent</summary>
+
+Override any agent. Works with any provider configured in your OpenCode config:
 
 ```jsonc
 {
@@ -171,9 +181,10 @@ Override any agent's model, variant, or prompt. Works with any provider configur
 }
 ```
 
-### Tmux Multiplexer
+</details>
 
-Real-time worker monitoring:
+<details>
+<summary><strong>Tmux Multiplexer</strong> — real-time worker monitoring</summary>
 
 ```jsonc
 {
@@ -185,7 +196,10 @@ Real-time worker monitoring:
 }
 ```
 
-### Remote MCPs
+</details>
+
+<details>
+<summary><strong>Remote MCPs</strong></summary>
 
 Three remote MCP servers are available (all enabled by default):
 
@@ -199,7 +213,10 @@ Three remote MCP servers are available (all enabled by default):
 }
 ```
 
-### Full Example
+</details>
+
+<details>
+<summary><strong>Full Config Example</strong></summary>
 
 ```jsonc
 {
@@ -217,6 +234,8 @@ Three remote MCP servers are available (all enabled by default):
   }
 }
 ```
+
+</details>
 
 ## Architecture
 
