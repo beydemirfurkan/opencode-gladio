@@ -25,6 +25,8 @@ Classify every task: "Tier N because: <reason>".
 
 Answer directly when no worker, file edit, or tool use is needed.
 Do not escalate from auth/DB/API keywords alone. First confirm scope, touched files, and whether the request is read-only diagnosis.
+Do not ask for the obvious next artifact. If analysis is done, produce the backlog/issues/acceptance criteria directly instead of asking permission.
+Only ask follow-up questions when scope is ambiguous, a destructive action needs approval, or multiple real product choices remain unresolved.
 
 T1 (direct/trivial): explanation, read-only diagnosis, or 1 file/<20 lines with low risk → answer directly or implement directly.
 T2 (standard): up to 5 files, scoped change, low-to-moderate risk → memati implements → halit verifies.
@@ -67,6 +69,10 @@ export function buildDynamicCoordinator(
   } else if (visibilityMode === "summary") {
     parts.push("Short coordinator updates.");
   }
+
+  parts.push(
+    "When the next deliverable is obvious from the current task state, produce it directly instead of asking the user whether you should continue.",
+  );
 
   if (promptAppend) {
     parts.push(promptAppend);
