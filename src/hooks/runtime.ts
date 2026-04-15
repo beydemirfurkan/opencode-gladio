@@ -1,6 +1,8 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { createHash } from "node:crypto";
 import type { PluginInput } from "@opencode-ai/plugin";
-import type { HarnessConfig, HookProfile } from "../types";
+import type { HarnessConfig, HookProfile, HooksConfig } from "../types";
 import { readText } from "../utils";
 import {
   detectProjectFacts,
@@ -8,9 +10,24 @@ import {
   type ProjectFacts,
 } from "../project-facts";
 
+export type PipelinePhase =
+  | "clarity-gate"
+  | "tier"
+  | "delegate"
+  | "execute"
+  | "review"
+  | "verify"
+  | "repair"
+  | "complete"
+  | "unknown";
+
 type SessionState = {
   agent?: string;
   toolCount: number;
+  phase: PipelinePhase;
+  phaseMessageCount: number;
+  delegateRetries: Map<string, number>;
+  lastNudge?: string;
 };
 
 function estimateKey(directory: string): string {
@@ -19,6 +36,10 @@ function estimateKey(directory: string): string {
 
 export function resolveHookProfile(config: HarnessConfig): HookProfile {
   return config.hooks?.profile ?? "standard";
+}
+
+export function resolveHooksConfig(config: HarnessConfig): HooksConfig {
+  return config.hooks ?? {};
 }
 
 export function profileMatches(
@@ -98,7 +119,12 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
   function ensureSession(sessionID: string): SessionState {
     const existing = sessions.get(sessionID);
     if (existing) return existing;
-    const created: SessionState = { toolCount: 0 };
+    const created: SessionState = {
+      toolCount: 0,
+      phase: "unknown",
+      phaseMessageCount: 0,
+      delegateRetries: new Map(),
+    };
     sessions.set(sessionID, created);
     return created;
   }
@@ -118,9 +144,57 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
     return `[ProjectContext] id: ${projectID} | packageManager: ${facts.packageManager} | languages: ${languages} | frameworks: ${frameworks}`;
   }
 
+  function detectPhaseFromText(text: string): PipelinePhase {
+    const lower = text.toLowerCase();
+    if (/\btier\s+[1-4]\b/.test(lower) || lower.includes("tierpipeline")) return "tier";
+    if (lower.includes("claritygate") || /\b(question|ask|clarif)/i.test(lower) && lower.includes("?")) return "clarity-gate";
+    if (lower.includes("[task:") || lower.includes("delegate") || lower.includes("worker")) return "delegate";
+    if (lower.includes("review") && (lower.includes("approve") || lower.includes("request_changes"))) return "review";
+    if (lower.includes("pass") || lower.includes("fail") || lower.includes("verify") || lower.includes("tsc") || lower.includes("test")) return "verify";
+    if (lower.includes("repair") || lower.includes("fix") && lower.includes("root cause")) return "repair";
+    if (lower.includes("implement") || lower.includes("edit") || lower.includes("write") || lower.includes("create")) return "execute";
+    if (lower.includes("done") || lower.includes("complete") || lower.includes("finished")) return "complete";
+    return "unknown";
+  }
+
+  function updatePhase(sessionID: string, text: string): PipelinePhase {
+    const session = ensureSession(sessionID);
+    const detected = detectPhaseFromText(text);
+    if (detected !== "unknown" && detected !== session.phase) {
+      session.phase = detected;
+      session.phaseMessageCount = 0;
+    } else if (detected !== "unknown") {
+      session.phaseMessageCount += 1;
+    }
+    return session.phase;
+  }
+
+  function getPhaseStuckCount(sessionID: string): number {
+    return sessions.get(sessionID)?.phaseMessageCount ?? 0;
+  }
+
+  function getPhase(sessionID: string): PipelinePhase {
+    return sessions.get(sessionID)?.phase ?? "unknown";
+  }
+
+  function getDelegateRetryCount(sessionID: string, taskKey: string): number {
+    const session = sessions.get(sessionID);
+    if (!session) return 0;
+    return session.delegateRetries.get(taskKey) ?? 0;
+  }
+
+  function incrementDelegateRetry(sessionID: string, taskKey: string): number {
+    const session = ensureSession(sessionID);
+    const current = session.delegateRetries.get(taskKey) ?? 0;
+    const next = current + 1;
+    session.delegateRetries.set(taskKey, next);
+    return next;
+  }
+
   return {
     detectProjectFacts: () => projectFacts,
     buildProjectFactsLine: () => buildProjectFactsLine(projectFacts),
+    getProjectFacts: () => projectFacts,
     prepareSessionContext: (sessionID: string) => {
       ensureSession(sessionID);
     },
@@ -134,6 +208,7 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
       state.toolCount += 1;
       return state.toolCount;
     },
+    getToolCount: (sessionID: string) => sessions.get(sessionID)?.toolCount ?? 0,
     clearSession: (sessionID: string) => {
       sessions.delete(sessionID);
     },
@@ -142,6 +217,15 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
     isWsl: () => wslMode,
     getWslWinPath: () => wslWinPath,
     buildModeInjection,
+    updatePhase,
+    getPhase,
+    getPhaseStuckCount,
+    getDelegateRetryCount,
+    incrementDelegateRetry,
+    setLastNudge: (sessionID: string, nudge: string) => {
+      ensureSession(sessionID).lastNudge = nudge;
+    },
+    getLastNudge: (sessionID: string) => sessions.get(sessionID)?.lastNudge,
   };
 }
 

@@ -51,6 +51,26 @@ export type MultiplexerConfig = {
   main_pane_size?: number;
 };
 
+export type HooksConfig = {
+  profile?: HookProfile;
+  session_start?: boolean;
+  pre_tool_use?: boolean;
+  post_tool_use?: boolean;
+  post_tool_use_nudge?: boolean;
+  checkpoint_interval?: number;
+  stop?: boolean;
+  session_end?: boolean;
+  phase_reminder?: boolean;
+  stuck_threshold?: number;
+  todo_continuation?: boolean;
+  apply_patch_rescue?: boolean;
+  json_error_recovery?: boolean;
+  delegate_retry?: boolean;
+  delegate_max_retries?: number;
+  filter_skills?: boolean;
+  chat_headers?: boolean;
+};
+
 export type HarnessConfig = {
   schema_version?: number;
   default_mode?: HarnessMode;
@@ -59,14 +79,7 @@ export type HarnessConfig = {
   commands?: {
     enabled?: boolean;
   };
-  hooks?: {
-    profile?: HookProfile;
-    session_start?: boolean;
-    pre_tool_use?: boolean;
-    post_tool_use?: boolean;
-    stop?: boolean;
-    session_end?: boolean;
-  };
+  hooks?: HooksConfig;
   mcps?: McpToggles;
   agents?: Record<string, AgentOverride>;
   fallbacks?: FallbacksConfig;

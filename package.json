@@ -1,7 +1,7 @@
 {
   "name": "opencode-gladio",
-  "version": "0.3.0",
-  "description": "Disciplined orchestration plugin for OpenCode. Automatic 4-tier workflow pipeline, ClarityGate, dual parallel review, runtime model fallback.",
+  "version": "0.4.0",
+  "description": "Disciplined orchestration plugin for OpenCode. Automatic 4-tier workflow pipeline, ClarityGate, dual parallel review, runtime model fallback, pipeline integrity hooks.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -8,6 +8,13 @@ import { createSessionEndHook } from "./session-end";
 import { createSessionStartHook } from "./session-start";
 import { createStopHook } from "./stop";
 import { createSystemPromptHook } from "./system-prompt";
+import { createPhaseReminderHook } from "./phase-reminder";
+import { createTodoContinuationHook } from "./todo-continuation";
+import { createApplyPatchHook } from "./apply-patch";
+import { createJsonErrorRecoveryHook } from "./json-error-recovery";
+import { createDelegateTaskRetryHook } from "./delegate-task-retry";
+import { createFilterAvailableSkillsHook } from "./filter-available-skills";
+import { createChatHeadersHook } from "./chat-headers";
 
 type HookRecord = {
   config?: (config: any) => Promise<void>;
@@ -19,6 +26,7 @@ type HookRecord = {
   "session.idle"?: (input?: any) => Promise<void>;
   "session.deleted"?: (input?: any) => Promise<void>;
   "experimental.chat.system.transform"?: (input: any, output: any) => Promise<void>;
+  "experimental.chat.messages.transform"?: (input: any, output: any) => Promise<void>;
 };
 
 function wrapHookRecord(name: string, hook: HookRecord | undefined): HookRecord | undefined {
@@ -33,6 +41,7 @@ function wrapHookRecord(name: string, hook: HookRecord | undefined): HookRecord 
     "session.idle": safeHook(`${name}.session.idle`, hook["session.idle"]),
     "session.deleted": safeHook(`${name}.session.deleted`, hook["session.deleted"]),
     "experimental.chat.system.transform": safeHook(`${name}.experimental.chat.system.transform`, hook["experimental.chat.system.transform"]),
+    "experimental.chat.messages.transform": safeHook(`${name}.experimental.chat.messages.transform`, hook["experimental.chat.messages.transform"]),
   };
 }
 
@@ -92,6 +101,22 @@ function composeSystemTransform(hooks: HookRecord[]) {
   };
 }
 
+function composeMessagesTransform(hooks: HookRecord[]) {
+  const active = hooks.map((hook) => hook["experimental.chat.messages.transform"]).filter(Boolean);
+  if (active.length === 0) return undefined;
+  return async (input: any, output: any) => {
+    for (const hook of active) await hook?.(input, output);
+  };
+}
+
+function composeSessionIdle(hooks: HookRecord[]) {
+  const active = hooks.map((hook) => hook["session.idle"]).filter(Boolean) as Array<(input?: any) => Promise<void>>;
+  if (active.length === 0) return undefined;
+  return async (input?: any) => {
+    for (const hook of active) await hook(input);
+  };
+}
+
 export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig) {
   const hooks: HookRecord[] = [];
   const profile = resolveHookProfile(config);
@@ -112,11 +137,32 @@ export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig
   registerHook("post_tool_use", config.hooks?.post_tool_use !== false, () =>
     createPostToolUseHook(config, runtime, profile),
   );
+  registerHook("todo_continuation", config.hooks?.todo_continuation !== false, () =>
+    createTodoContinuationHook(config, runtime),
+  );
   registerHook("stop", config.hooks?.stop !== false, () => createStopHook(ctx, runtime));
   registerHook("session_end", config.hooks?.session_end !== false, () =>
     createSessionEndHook(runtime),
   );
   registerHook("system_prompt", true, () => createSystemPromptHook(runtime));
+  registerHook("phase_reminder", config.hooks?.phase_reminder !== false, () =>
+    createPhaseReminderHook(config, runtime),
+  );
+  registerHook("apply_patch", config.hooks?.apply_patch_rescue !== false, () =>
+    createApplyPatchHook(config, runtime),
+  );
+  registerHook("json_error_recovery", config.hooks?.json_error_recovery !== false, () =>
+    createJsonErrorRecoveryHook(config, runtime),
+  );
+  registerHook("delegate_retry", config.hooks?.delegate_retry !== false, () =>
+    createDelegateTaskRetryHook(config, runtime),
+  );
+  registerHook("filter_skills", config.hooks?.filter_skills !== false, () =>
+    createFilterAvailableSkillsHook(config, runtime),
+  );
+  registerHook("chat_headers", config.hooks?.chat_headers !== false, () =>
+    createChatHeadersHook(config, runtime),
+  );
 
   return {
     config: composeConfig(hooks),
@@ -125,8 +171,9 @@ export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig
     "tool.execute.before": composeToolBefore(hooks),
     "tool.execute.after": composeToolAfter(hooks),
     "session.created": composeSingleArg(hooks, "session.created"),
-    "session.idle": composeSingleArg(hooks, "session.idle"),
+    "session.idle": composeSessionIdle(hooks),
     "session.deleted": composeSingleArg(hooks, "session.deleted"),
     "experimental.chat.system.transform": composeSystemTransform(hooks),
+    "experimental.chat.messages.transform": composeMessagesTransform(hooks),
   };
 }
