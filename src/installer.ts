@@ -15,6 +15,7 @@ import { SAMPLE_PROJECT_CONFIG } from "./config";
 type JsonRecord = Record<string, unknown>;
 
 export const MANAGED_PACKAGE_NAMES = ["opencode-gladio"] as const;
+export const MANAGED_PLUGIN_ENTRY = MANAGED_PACKAGE_NAMES[0];
 
 export function getConfigDir(): string {
   const envDir = process.env.OPENCODE_CONFIG_DIR?.trim();
@@ -39,6 +40,25 @@ function packageRoot(): string {
 
 function pluginEntryForPath(path: string): string {
   return `file://${path}`;
+}
+
+function installedPackagePath(configDir: string): string {
+  return join(configDir, "node_modules", MANAGED_PLUGIN_ENTRY);
+}
+
+export function buildManagedPluginAliases(configDir?: string): string[] {
+  const aliases = new Set<string>(MANAGED_PACKAGE_NAMES);
+  aliases.add(pluginEntryForPath(packageRoot()));
+
+  if (configDir) {
+    aliases.add(pluginEntryForPath(installedPackagePath(configDir)));
+  }
+
+  return [...aliases];
+}
+
+export function isManagedPluginEntry(entry: string, configDir?: string): boolean {
+  return buildManagedPluginAliases(configDir).includes(entry);
 }
 
 export function detectMainConfigPath(paths: ReturnType<typeof getConfigPaths>): {
@@ -72,25 +92,23 @@ function ensureDir(dirPath: string): void {
   mkdirSync(dirPath, { recursive: true });
 }
 
-function mergePluginList(existing: unknown): string[] {
-  const selfEntry = pluginEntryForPath(packageRoot());
+export function normalizeManagedPluginList(existing: unknown, configDir?: string): string[] {
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
-  const retained = current.filter((item) => item !== selfEntry && item !== "opencode-gladio");
-  return [selfEntry, ...retained];
+  const retained = current.filter((item) => !isManagedPluginEntry(item, configDir));
+  return [MANAGED_PLUGIN_ENTRY, ...retained];
 }
 
 export function buildManagedPluginEntries(_vendorDir?: string): string[] {
-  return [pluginEntryForPath(packageRoot())];
+  return [...MANAGED_PACKAGE_NAMES];
 }
 
-function removeHarnessPluginList(existing: unknown): string[] | undefined {
-  const selfEntry = pluginEntryForPath(packageRoot());
+export function removeManagedPluginList(existing: unknown, configDir?: string): string[] | undefined {
   const current = Array.isArray(existing)
     ? existing.filter((item): item is string => typeof item === "string")
     : [];
-  const retained = current.filter((item) => item !== selfEntry && item !== "opencode-gladio");
+  const retained = current.filter((item) => !isManagedPluginEntry(item, configDir));
   return retained.length > 0 ? retained : undefined;
 }
 
@@ -108,7 +126,7 @@ function updateConfig(paths: ReturnType<typeof getConfigPaths>): string {
   const config = readJsonLike(detected.path);
   backupFile(detected.path);
   config.$schema = config.$schema ?? "https://opencode.ai/config.json";
-  config.plugin = mergePluginList(config.plugin);
+  config.plugin = normalizeManagedPluginList(config.plugin, paths.configDir);
   ensureDefaultAgent(config);
   writeJson(detected.path, config);
   return detected.path;
@@ -197,7 +215,7 @@ export async function uninstallHarness(): Promise<{
   if (existsSync(detected.path)) {
     const config = readJsonLike(detected.path);
     backupFile(detected.path);
-    const nextPlugin = removeHarnessPluginList(config.plugin);
+    const nextPlugin = removeManagedPluginList(config.plugin, paths.configDir);
     if (nextPlugin) config.plugin = nextPlugin;
     else delete config.plugin;
     writeJson(detected.path, config);

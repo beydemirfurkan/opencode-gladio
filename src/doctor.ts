@@ -12,6 +12,7 @@ import {
   detectMainConfigPath,
   getConfigDir,
   getConfigPaths,
+  isManagedPluginEntry,
   readJsonLike,
 } from "./installer";
 
@@ -156,11 +157,13 @@ function checkManagedPlugins(
     ? configState.plugin.filter((entry): entry is string => typeof entry === "string")
     : [];
   const expected = buildManagedPluginEntries(paths.vendorDir);
-  const missing = expected.filter((entry) => !existingPlugin.includes(entry));
+  const missing = expected.filter(
+    (entry) => !existingPlugin.some((configured) => configured === entry || isManagedPluginEntry(configured, paths.configDir)),
+  );
   const status: DoctorStatus = missing.length === 0 ? "PASS" : "FAIL";
   const details = missing.length
     ? [`Missing managed entries: ${missing.join(", ")}`]
-    : ["All managed plugin entries are present."];
+    : ["Managed plugin entry present via package name or file path."];
   const summary =
     status === "PASS"
       ? "Managed plugin list is complete."

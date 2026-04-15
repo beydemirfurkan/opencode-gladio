@@ -3,7 +3,11 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CURRENT_HARNESS_SCHEMA_VERSION } from "../config";
-import { buildManagedPluginEntries, getConfigPaths } from "../installer";
+import {
+  MANAGED_PLUGIN_ENTRY,
+  buildManagedPluginEntries,
+  getConfigPaths,
+} from "../installer";
 import {
   determineDoctorExitCode,
   runDoctor,
@@ -124,6 +128,22 @@ describe("Doctor command helpers", () => {
       const managedCheck = report.checks.find((check) => check.name === "Managed plugins");
       expect(managedCheck?.status).toBe("FAIL");
       expect(managedCheck?.details[0]).toContain("Missing managed entries");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("accepts installed file-path plugin wiring as managed", () => {
+    const { options, cleanup } = prepareDoctorEnvironment({
+      pluginEntries: (paths) => [
+        `file://${join(paths.configDir, "node_modules", MANAGED_PLUGIN_ENTRY)}`,
+      ],
+    });
+    try {
+      const report = runDoctor(options);
+      expect(report.overallStatus).toBe("PASS");
+      const managedCheck = report.checks.find((check) => check.name === "Managed plugins");
+      expect(managedCheck?.status).toBe("PASS");
     } finally {
       cleanup();
     }
