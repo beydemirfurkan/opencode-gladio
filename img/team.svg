@@ -1,0 +1,77 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08101B"/>
+      <stop offset="1" stop-color="#152A43"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" rx="40" fill="url(#bg)"/>
+  <text x="86" y="118" fill="white" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="700">The Gladio Crew</text>
+  <text x="88" y="168" fill="#B8CAE0" font-family="Inter, Arial, sans-serif" font-size="28">Eleven specialists. One forced pipeline. Persistent project memory.</text>
+  <g font-family="Inter, Arial, sans-serif" font-weight="700" font-size="28" text-anchor="middle">
+    <g transform="translate(120 240)">
+      <rect width="240" height="250" rx="28" fill="#102A46"/>
+      <circle cx="120" cy="90" r="54" fill="#4A90D9"/>
+      <text x="120" y="184" fill="white">Polat</text>
+      <text x="120" y="216" fill="#CFE6FF" font-size="16">Orchestrator</text>
+    </g>
+    <g transform="translate(392 240)">
+      <rect width="240" height="250" rx="28" fill="#0C2D3B"/>
+      <circle cx="120" cy="90" r="54" fill="#3498DB"/>
+      <text x="120" y="184" fill="white">Çakır</text>
+      <text x="120" y="216" fill="#D1F0FF" font-size="16">Execution Lead</text>
+    </g>
+    <g transform="translate(664 240)">
+      <rect width="240" height="250" rx="28" fill="#113522"/>
+      <circle cx="120" cy="90" r="54" fill="#2ECC71"/>
+      <text x="120" y="184" fill="white">Memati</text>
+      <text x="120" y="216" fill="#DBFFE8" font-size="16">Implementer</text>
+    </g>
+    <g transform="translate(936 240)">
+      <rect width="240" height="250" rx="28" fill="#3A240B"/>
+      <circle cx="120" cy="90" r="54" fill="#F39C12"/>
+      <text x="120" y="184" fill="white">Abdülhey</text>
+      <text x="120" y="216" fill="#FFF1D0" font-size="16">Researcher</text>
+    </g>
+    <g transform="translate(1208 240)">
+      <rect width="240" height="250" rx="28" fill="#351217"/>
+      <circle cx="120" cy="90" r="54" fill="#E74C3C"/>
+      <text x="120" y="184" fill="white">Aslan</text>
+      <text x="120" y="216" fill="#FFDCD7" font-size="16">Reviewer</text>
+    </g>
+    <g transform="translate(120 536)">
+      <rect width="240" height="250" rx="28" fill="#2A163A"/>
+      <circle cx="120" cy="90" r="54" fill="#9B59B6"/>
+      <text x="120" y="184" fill="white">İskender</text>
+      <text x="120" y="216" fill="#F0DDFF" font-size="16">Adversarial</text>
+    </g>
+    <g transform="translate(392 536)">
+      <rect width="240" height="250" rx="28" fill="#3A210E"/>
+      <circle cx="120" cy="90" r="54" fill="#E67E22"/>
+      <text x="120" y="184" fill="white">Tuncay</text>
+      <text x="120" y="216" fill="#FFE8CE" font-size="16">Repair</text>
+    </g>
+    <g transform="translate(664 536)">
+      <rect width="240" height="250" rx="28" fill="#2E3537"/>
+      <circle cx="120" cy="90" r="54" fill="#95A5A6"/>
+      <text x="120" y="184" fill="white">Halit</text>
+      <text x="120" y="216" fill="#EEF4F4" font-size="16">Verifier</text>
+    </g>
+    <g transform="translate(936 536)">
+      <rect width="240" height="250" rx="28" fill="#38112E"/>
+      <circle cx="120" cy="90" r="54" fill="#FF69B4"/>
+      <text x="120" y="184" fill="white">Güllü Erhan</text>
+      <text x="120" y="216" fill="#FFE0F0" font-size="16">Frontend</text>
+    </g>
+    <g transform="translate(1208 536)">
+      <rect width="240" height="250" rx="28" fill="#0D332A"/>
+      <circle cx="120" cy="90" r="54" fill="#1ABC9C"/>
+      <text x="120" y="184" fill="white">Laz Ziya</text>
+      <text x="120" y="216" fill="#D8FFF5" font-size="16">Explorer</text>
+    </g>
+  </g>
+  <g transform="translate(1340 78)">
+    <circle cx="90" cy="90" r="74" fill="#8E44AD"/>
+    <text x="90" y="185" fill="#F0DEFF" font-family="Inter, Arial, sans-serif" font-size="22" text-anchor="middle">Pala • Chaos</text>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg width="768" height="960" viewBox="0 0 768 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="70" x2="640" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#261A07"/>
+      <stop offset="1" stop-color="#F39C12"/>
+    </linearGradient>
+  </defs>
+  <rect width="768" height="960" rx="40" fill="url(#bg)"/>
+  <rect x="26" y="26" width="716" height="908" rx="28" stroke="white" stroke-opacity="0.18"/>
+  <circle cx="384" cy="320" r="116" fill="#FFF7E8" fill-opacity="0.16"/>
+  <path d="M248 606C248 508.701 326.701 430 424 430H344C441.299 430 520 508.701 520 606V652H248V606Z" fill="#FFF6E6" fill-opacity="0.22"/>
+  <path d="M300 242H468V378H300V242Z" fill="#FFF1D3" fill-opacity="0.24"/>
+  <path d="M334 276H434" stroke="#FFF1D3" stroke-width="18" stroke-linecap="round"/>
+  <path d="M334 320H434" stroke="#FFE1A7" stroke-width="18" stroke-linecap="round"/>
+  <path d="M334 364H404" stroke="#FFD27B" stroke-width="18" stroke-linecap="round"/>
+  <text x="70" y="760" fill="#FFF7E8" font-family="Inter, Arial, sans-serif" font-size="26" letter-spacing="3.2">RESEARCHER</text>
+  <text x="66" y="830" fill="white" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="700">Abdülhey</text>
+  <text x="70" y="884" fill="#FFF0CC" font-family="Inter, Arial, sans-serif" font-size="30">Docs • APIs • Evidence gathering</text>
+</svg>

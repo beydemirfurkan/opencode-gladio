@@ -1,267 +1,317 @@
 <div align="center">
 
-# ⚔️ opencode-gladio
+# opencode-gladio
+
+[![Gladio Crew](./img/team.svg)](./img/team.svg)
 
 **Disciplined orchestration plugin for [OpenCode](https://opencode.ai)**
 
-One coordinator. Ten specialists. Automatic 4-tier pipeline. Zero ambiguity.
+Eleven specialists. Forced 4-tier delivery pipeline. Persistent project memory.
 
-[![npm version](https://img.shields.io/npm/v/opencode-gladio?color=blue&label=npm&style=flat-square)](https://www.npmjs.com/package/opencode-gladio)
-[![npm downloads](https://img.shields.io/npm/dt/opencode-gladio?color=green&style=flat-square)](https://www.npmjs.com/package/opencode-gladio)
+[![npm version](https://img.shields.io/npm/v/opencode-gladio?color=2563eb&label=npm&style=flat-square)](https://www.npmjs.com/package/opencode-gladio)
+[![npm downloads](https://img.shields.io/npm/dt/opencode-gladio?color=16a34a&style=flat-square)](https://www.npmjs.com/package/opencode-gladio)
 [![license](https://img.shields.io/github/license/beydemirfurkan/opencode-gladio?style=flat-square)](https://github.com/beydemirfurkan/opencode-gladio/blob/main/LICENSE)
-[![node](https://img.shields.io/node/v/opencode-gladio?style=flat-square)](https://nodejs.org)
+[![OpenCode](https://img.shields.io/badge/OpenCode-plugin-111827?style=flat-square)](https://opencode.ai)
 
 </div>
 
 ---
 
-## Install
+## Why Gladio
+
+Most OpenCode setups optimize for flexibility.
+
+Gladio optimizes for **discipline**:
+
+- ambiguity gets challenged before execution
+- work is forced into a tiered pipeline
+- risky changes get reviewed, verified, and repaired
+- project learnings survive across sessions in `.gladio/`
+
+This is closer to a senior-engineer operating layer than a simple agent preset.
+
+## Quick Start
 
 ```bash
-npx opencode-gladio install
+npx opencode-gladio@latest install
 ```
 
-or install globally:
+Or install globally:
 
 ```bash
 npm i -g opencode-gladio
 opencode-gladio install
 ```
 
-That's it. Open OpenCode and start working. Polat (the coordinator) handles the rest.
+After install, open OpenCode and start with your task. `polat` coordinates the rest.
 
-## Philosophy
+## Verify Your Setup
 
-Other orchestration plugins give you flexibility. Gladio gives you **discipline**.
+Inside OpenCode, run:
 
-Every task passes through a forced pipeline: ambiguity check → tier classification → worker chain → verification. No skipped steps. No guessing. No "I'll just do it all myself."
-
-**The trade-off:** More overhead on trivial tasks. **The payoff:** Correct, reviewed, verified results on everything else.
-
-## How It Works
-
-```
-User gives a task
-       ↓
-  ┌─────────────┐
-  │ ClarityGate │  ← Ambiguous? Ask questions first.
-  └──────┬──────┘
-         ↓ Clear
-  ┌─────────────┐
-  │ Tier Class. │  ← "Tier 2 because: 3 files, low risk"
-  └──────┬──────┘
-         ↓
-  ┌─────────────┐
-  │  Pipeline   │  ← Forced worker chain for that tier
-  └──────┬──────┘
-         ↓
-     Result
+```text
+ping polat
 ```
 
-### ClarityGate
+Then try a real task, or check the generated config:
 
-Before any work starts, Polat checks: is this task specific enough?
-
-- **Specific task** → Skip straight to tier classification. No questions.
-- **Vague task** → 1-3 focused questions to the user. Wait for answers. Then proceed.
-
-```
-"Fix the null crash in auth.ts:42"     → Act immediately.
-"Make the app faster"                  → "What specifically is slow? Which operations?"
-"Add caching"                          → "Which data? TTL expectations? Invalidation strategy?"
+```bash
+opencode-gladio doctor
+opencode-gladio config show --json
 ```
 
-Workers can also push back. If a delegated task lacks context, the worker returns `BLOCKED: <missing info>` instead of guessing.
+## The Pipeline
 
-### Tier Pipeline
+```text
+User task
+   ↓
+ClarityGate
+   ↓
+Tier classification
+   ↓
+Forced worker chain
+   ↓
+Verification / review / repair
+   ↓
+Done
+```
 
-Every task is classified into one of four tiers. Each tier has a **forced** worker chain — Polat cannot skip steps.
+### Tier Matrix
 
-| Tier | Trigger | Pipeline |
-|------|---------|----------|
-| **1** Trivial | Single file, <20 lines | Polat implements directly |
-| **2** Standard | 2-5 files, low risk | memati implements → halit verifies |
-| **3** Risky | Auth, DB, API, 6+ files | memati → halit → **aslan-akbey + iskender** (parallel review) → tuncay repairs if needed |
-| **4** Critical | Payments, prod data | Full Tier 3 → **pala** chaos tests |
+| Tier | Trigger | Forced pipeline |
+|------|---------|-----------------|
+| **1** | Single-file trivial work | `polat` implements directly |
+| **2** | Standard low-risk changes | `memati` -> `halit` |
+| **3** | Risky or multi-file work | `memati` -> `halit` -> `aslan-akbey` + `iskender` -> `tuncay` if needed |
+| **4** | Critical paths, data, production risk | Tier 3 + `pala` chaos testing |
 
-**Dual review** (Tier 3+): Two reviewers work in parallel:
-- **Aslan Akbey** — correctness, maintainability
-- **İskender** — security, race conditions, edge cases
+### What Makes Gladio Different
 
-Both must pass. If either rejects, **Tuncay** does scoped repairs and the cycle repeats.
+- **ClarityGate**: vague asks trigger focused questions before work starts
+- **Dual review**: risky work gets both correctness and adversarial review
+- **Pipeline integrity hooks**: phase reminders, retry nudges, todo continuation, patch rescue signals
+- **Persistent memory**: Gladio stores high-value learnings in `.gladio/context.json`
+- **Project facts injection**: languages, frameworks, package manager, and session context feed the coordinator
 
-## Agents
+## Persistent Project Memory
 
-All agents use your OpenCode default model. Override per-agent via config.
+Gladio `0.5.0` adds repo-local persistent memory.
 
-| Agent | Role | Variant | When |
-|-------|------|---------|------|
-| **Polat** | Coordinator | `high` | Always active |
-| **Çakır** | Execution lead | `none` | Complex decomposition |
-| **Memati** | Implementer | `high` | Tier 2+ |
-| **Abdülhey** | Researcher | `none` | Docs, APIs, evidence |
-| **Aslan Akbey** | Correctness reviewer | `high` | Tier 3+ review |
-| **İskender** | Adversarial reviewer | `high` | Tier 3+ review |
-| **Tuncay** | Repair specialist | `high` | Review rejection |
-| **Halit** | Verifier | `none` | Build/test PASS/FAIL |
-| **Güllü Erhan** | Frontend specialist | `high` | UI/UX tasks |
-| **Laz Ziya** | Explorer | `none` | Fast codebase mapping |
-| **Pala** | Chaos tester | `high` | Tier 4 |
+Generated files:
+
+- `.gladio/context.json`
+- `.gladio/pipeline-state.json`
+- `.gladio/project.json`
+
+Built-in tools:
+
+- `gladio-learn`
+- `gladio-recall`
+
+CLI helpers:
+
+```bash
+opencode-gladio memory show
+opencode-gladio memory show --json
+opencode-gladio memory forget <id>
+opencode-gladio memory reset
+```
+
+The installer also adds `.gladio/` to `.gitignore` automatically.
+
+## Meet the Crew
+
+### Polat
+
+[![Polat](./img/agents/polat.svg)](./img/agents/polat.svg)
+
+**Role:** Orchestrator and final coordinator.
+
+`polat` owns ClarityGate, tier routing, delegation, and final synthesis.
+
+### Çakır
+
+[![Çakır](./img/agents/cakir.svg)](./img/agents/cakir.svg)
+
+**Role:** Execution lead.
+
+`cakir` breaks larger asks into scoped tasks and routes specialists.
+
+### Memati
+
+[![Memati](./img/agents/memati.svg)](./img/agents/memati.svg)
+
+**Role:** Implementer.
+
+`memati` makes the code changes and carries the main delivery path.
+
+### Abdülhey
+
+[![Abdülhey](./img/agents/abdulhey.svg)](./img/agents/abdulhey.svg)
+
+**Role:** Researcher.
+
+`abdulhey` digs through docs, APIs, evidence, and rationale.
+
+### Aslan Akbey
+
+[![Aslan Akbey](./img/agents/aslan-akbey.svg)](./img/agents/aslan-akbey.svg)
+
+**Role:** Correctness reviewer.
+
+`aslan-akbey` checks maintainability, logic, and production safety.
+
+### İskender
+
+[![İskender](./img/agents/iskender.svg)](./img/agents/iskender.svg)
+
+**Role:** Adversarial reviewer.
+
+`iskender` looks for edge cases, misuse, security gaps, and race conditions.
+
+### Tuncay
+
+[![Tuncay](./img/agents/tuncay.svg)](./img/agents/tuncay.svg)
+
+**Role:** Repair specialist.
+
+`tuncay` performs scoped repairs after review failures.
+
+### Halit
+
+[![Halit](./img/agents/halit.svg)](./img/agents/halit.svg)
+
+**Role:** Verifier.
+
+`halit` runs the build-test gate and reports pass/fail clearly.
+
+### Güllü Erhan
+
+[![Güllü Erhan](./img/agents/gullu-erhan.svg)](./img/agents/gullu-erhan.svg)
+
+**Role:** Frontend specialist.
+
+`gullu-erhan` handles UI quality, layout polish, and implementation aesthetics.
+
+### Laz Ziya
+
+[![Laz Ziya](./img/agents/laz-ziya.svg)](./img/agents/laz-ziya.svg)
+
+**Role:** Explorer.
+
+`laz-ziya` rapidly maps the repo and finds the right files and patterns.
+
+### Pala
+
+[![Pala](./img/agents/pala.svg)](./img/agents/pala.svg)
+
+**Role:** Chaos tester.
+
+`pala` pressure-tests critical flows with hostile or abnormal scenarios.
 
 ## CLI
 
 ```bash
-opencode-gladio install          # Install into OpenCode config
-opencode-gladio fresh-install    # Reinstall, keep user config
-opencode-gladio uninstall        # Remove from OpenCode config
-opencode-gladio doctor           # Health check
-opencode-gladio print-config     # Print resolved config
+opencode-gladio install
+opencode-gladio fresh-install
+opencode-gladio uninstall
+opencode-gladio doctor
+opencode-gladio config show --json
+opencode-gladio memory show --json
+opencode-gladio memory forget <id>
+opencode-gladio memory reset
+opencode-gladio print-config
 ```
 
 ## Configuration
 
-Config file: `~/.config/opencode/opencode-gladio.jsonc`
+Global config path:
 
-<details>
-<summary><strong>JSON Schema</strong> — autocomplete in your editor</summary>
-
-```json
-{
-  "$schema": "https://unpkg.com/opencode-gladio@latest/opencode-gladio.schema.json"
-}
+```text
+~/.config/opencode/opencode-gladio.jsonc
 ```
 
-</details>
-
-<details>
-<summary><strong>Worker Visibility</strong></summary>
+Project-local memory is controlled through the `memory` block:
 
 ```jsonc
 {
-  "ui": {
-    "worker_visibility": "visible"  // "visible" | "summary" | "hidden"
+  "$schema": "https://unpkg.com/opencode-gladio@latest/opencode-gladio.schema.json",
+  "schema_version": 2,
+  "memory": {
+    "enabled": true,
+    "dir": ".gladio",
+    "max_learnings": 100,
+    "inject_summary": true
   }
 }
 ```
 
-</details>
-
-<details>
-<summary><strong>Model Fallback</strong> — auto-switch on rate limits</summary>
+Useful config areas:
 
 ```jsonc
 {
+  "ui": {
+    "worker_visibility": "visible"
+  },
+  "hooks": {
+    "profile": "standard",
+    "phase_reminder": true,
+    "todo_continuation": true,
+    "apply_patch_rescue": true,
+    "json_error_recovery": true,
+    "delegate_retry": true,
+    "chat_headers": true
+  },
   "fallbacks": {
     "enabled": true,
     "chains": {
-      "polat": ["zai/glm-5.1", "anthropic/claude-sonnet-4-20250514"],
+      "polat": ["zai/glm-5.1", "openai/gpt-5.4"],
       "halit": ["opencode-go/kimi-k2.5", "zai/glm-5.1"]
     }
   }
 }
 ```
 
-</details>
-
-<details>
-<summary><strong>Agent Overrides</strong> — model, variant, or prompt per agent</summary>
-
-Override any agent. Works with any provider configured in your OpenCode config:
-
-```jsonc
-{
-  "agents": {
-    "polat": { "model": "zai/glm-5.1", "variant": "high" },
-    "memati": { "model": "anthropic/claude-sonnet-4-20250514" },
-    "halit": { "model": "opencode-go/kimi-k2.5" },
-    "abdulhey": {
-      "prompt_append": "Always cite sources with URLs."
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Tmux Multiplexer</strong> — real-time worker monitoring</summary>
-
-```jsonc
-{
-  "multiplexer": {
-    "type": "tmux",
-    "layout": "main-vertical",
-    "main_pane_size": 60
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Remote MCPs</strong></summary>
-
-Three remote MCP servers are available (all enabled by default):
-
-```jsonc
-{
-  "mcps": {
-    "context7": true,
-    "grep_app": true,
-    "websearch": true
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Full Config Example</strong></summary>
-
-```jsonc
-{
-  "$schema": "https://unpkg.com/opencode-gladio@latest/opencode-gladio.schema.json",
-  "schema_version": 2,
-  "ui": { "worker_visibility": "visible" },
-  "hooks": { "profile": "standard" },
-  "mcps": { "context7": true, "grep_app": true, "websearch": true },
-  "fallbacks": { "enabled": true, "chains": {} },
-  "multiplexer": { "type": "none" },
-  "agents": {
-    "polat": { "model": "zai/glm-5.1", "variant": "high" },
-    "memati": { "model": "anthropic/claude-sonnet-4-20250514" },
-    "halit": { "model": "opencode-go/kimi-k2.5" }
-  }
-}
-```
-
-</details>
-
 ## Architecture
 
-```
+```text
 src/
-├── index.ts              # Plugin entry, hook registration
-├── agents.ts             # Agent definitions
-├── tier-router.ts        # Tier classification helpers
-├── token-manager.ts      # Token budget, compact, pruning
-├── fallback-manager.ts   # Runtime model fallback
-├── multiplexer.ts        # Tmux integration
-├── protocol.ts           # Structured delegation protocol
-├── prompts/
-│   ├── layers.ts         # Static/dynamic prompt layering
-│   ├── coordinator.ts    # Coordinator prompt builder
-│   └── workers.ts        # Worker prompt builders
-├── hooks/
-│   ├── system-prompt.ts  # System prompt injection
-│   ├── runtime.ts        # Hook runtime utilities
-│   ├── pre-tool-use.ts   # Input token tracking
-│   ├── post-tool-use.ts  # Output token tracking
-│   └── pre-compact.ts    # Context compression
-├── config.ts             # Config loading, migration
-├── installer.ts          # CLI installer
+├── index.ts              # Plugin entry
+├── agents.ts             # 11 agent definitions
+├── config.ts             # Config schema, defaults, merging
+├── cli.ts                # Installer + memory CLI
+├── installer.ts          # OpenCode install wiring
 ├── doctor.ts             # Health diagnostics
-└── cli.ts                # CLI entry point
+├── tier-router.ts        # 4-tier classification helpers
+├── fallback-manager.ts   # Runtime model fallback
+├── fallbacks.ts          # Startup fallback resolution
+├── mcp.ts                # Remote MCP registration
+├── project-facts.ts      # Language/framework detection
+├── memory/
+│   └── index.ts          # Persistent memory store
+├── tools/
+│   └── index.ts          # gladio-learn / gladio-recall
+├── prompts/
+│   ├── coordinator.ts
+│   ├── workers.ts
+│   └── layers.ts
+├── hooks/
+│   ├── session-start.ts
+│   ├── system-prompt.ts
+│   ├── pre-tool-use.ts
+│   ├── post-tool-use.ts
+│   ├── phase-reminder.ts
+│   ├── todo-continuation.ts
+│   ├── apply-patch.ts
+│   ├── json-error-recovery.ts
+│   ├── delegate-task-retry.ts
+│   ├── filter-available-skills.ts
+│   ├── chat-headers.ts
+│   ├── stop.ts
+│   ├── session-end.ts
+│   ├── runtime.ts
+│   └── sdk.ts
+└── __tests__/            # Unit tests
 ```
 
 ## Development
@@ -269,9 +319,10 @@ src/
 ```bash
 git clone https://github.com/beydemirfurkan/opencode-gladio.git
 cd opencode-gladio
-npm install
-npm run build
-npm test
+bun install
+bunx tsc --noEmit
+bun test
+bun run build
 ```
 
 ## License

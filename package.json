@@ -11,6 +11,7 @@
   "files": [
     "dist",
     "bin",
+    "img",
     "opencode-gladio.schema.json",
     "AGENTS.md",
     "README.md"

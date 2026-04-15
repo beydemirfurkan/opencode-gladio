@@ -1,0 +1,17 @@
+<svg width="768" height="960" viewBox="0 0 768 960" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="102" y1="72" x2="654" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E1027"/>
+      <stop offset="1" stop-color="#9B59B6"/>
+    </linearGradient>
+  </defs>
+  <rect width="768" height="960" rx="40" fill="url(#bg)"/>
+  <rect x="26" y="26" width="716" height="908" rx="28" stroke="white" stroke-opacity="0.18"/>
+  <circle cx="384" cy="320" r="116" fill="#F7EDFF" fill-opacity="0.15"/>
+  <path d="M248 606C248 508.701 326.701 430 424 430H344C441.299 430 520 508.701 520 606V652H248V606Z" fill="#F7EDFF" fill-opacity="0.2"/>
+  <path d="M384 212L470 270V384L384 442L298 384V270L384 212Z" stroke="#E6C8FF" stroke-width="18"/>
+  <path d="M384 270L420 330L384 390L348 330L384 270Z" fill="#E6C8FF" fill-opacity="0.9"/>
+  <text x="70" y="760" fill="#F8EDFF" font-family="Inter, Arial, sans-serif" font-size="26" letter-spacing="3.2">ADVERSARIAL REVIEWER</text>
+  <text x="66" y="830" fill="white" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="700">İskender</text>
+  <text x="70" y="884" fill="#EED8FF" font-family="Inter, Arial, sans-serif" font-size="30">Security • Races • Edge-case pressure</text>
+</svg>
