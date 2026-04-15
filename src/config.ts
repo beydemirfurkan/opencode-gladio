@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import { parse, type ParseError } from "jsonc-parser";
 import { z } from "zod";
-import type { HarnessConfig, OptionalComponentStatuses } from "./types";
+import type { HarnessConfig } from "./types";
 import { resolveFallbackState } from "./fallbacks";
 import { deepMerge, isObject } from "./utils";
 
@@ -28,7 +28,6 @@ export type ResolvedHarnessConfig = {
   validationWarnings: string[];
   userConfig: HarnessConfig;
   projectConfig: HarnessConfig;
-  optionalComponentStatus: OptionalComponentStatuses;
   fallbackState: ReturnType<typeof resolveFallbackState>;
 };
 
@@ -107,20 +106,6 @@ export const HarnessConfigSchema = z.object({
       main_pane_size: z.number().int().positive().optional(),
     })
     .optional(),
-  token_budget: z
-    .object({
-      enabled: z.boolean().optional(),
-      agentOverrides: z.record(
-        z.string(),
-        z.object({
-          promptChars: z.number().int().positive().optional(),
-          compactThreshold: z.number().int().positive().optional(),
-          compactRepeat: z.number().int().positive().optional(),
-        }),
-      ).optional(),
-      globalCompactThreshold: z.number().int().positive().optional(),
-    })
-    .optional(),
 });
 
 const DEFAULTS: HarnessConfig = {
@@ -149,17 +134,14 @@ const DEFAULTS: HarnessConfig = {
   agents: {},
   fallbacks: {
     enabled: true,
-    coordinator: [{ model: "openai/gpt-5.4", variant: "high" }],
-    verifier: [{ model: "openai/gpt-5.4", variant: "none" }],
+    coordinator: [],
+    verifier: [],
     chains: {},
   },
   multiplexer: {
     type: "none",
     layout: "main-vertical",
     main_pane_size: 60,
-  },
-  token_budget: {
-    enabled: true,
   },
 };
 
@@ -174,7 +156,6 @@ const ConfigSectionSchemas = {
   agents: HarnessConfigSchema.shape.agents,
   fallbacks: HarnessConfigSchema.shape.fallbacks,
   multiplexer: HarnessConfigSchema.shape.multiplexer,
-  token_budget: HarnessConfigSchema.shape.token_budget,
 } satisfies Record<keyof HarnessConfig, z.ZodTypeAny>;
 
 function formatParseErrors(errors: ParseError[]): string {
@@ -347,24 +328,6 @@ export function loadResolvedHarnessConfig(
     validationWarnings: [...userState.validationWarnings],
     userConfig: userState.config,
     projectConfig: {},
-    optionalComponentStatus: {
-      degradeOptionalFailures: true,
-      backgroundAgents: {
-        id: "background_agents",
-        kind: "background_agents",
-        enabled: false,
-        ready: false,
-        reason: "disabled",
-      },
-      shellStrategy: {
-        id: "shell_strategy",
-        kind: "shell_strategy",
-        enabled: false,
-        ready: false,
-        reason: "disabled",
-      },
-      mcps: {},
-    },
     fallbackState,
   };
 }

@@ -1,7 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { PluginInput } from "@opencode-ai/plugin";
-import { detectLocaleFromTexts, extractTextParts } from "../i18n";
 import type { HarnessConfig } from "../types";
 import type { HookRuntime } from "./runtime";
 import { PRIMARY_AGENTS, resolveSessionOrEntityID } from "./runtime";
@@ -35,8 +34,6 @@ export function createSessionStartHook(
     "chat.message": async (input: ChatMessageInput, output: ChatMessageOutput): Promise<void> => {
       const agentName = input.agent ?? (typeof output.message.agent === "string" ? output.message.agent : undefined);
       runtime.setSessionAgent(input.sessionID, agentName);
-      const locale = detectLocaleFromTexts(extractTextParts(output.parts ?? []));
-      runtime.setSessionLocale(input.sessionID, locale);
 
       const factsLine = runtime.buildProjectFactsLine();
       const docs = detectProjectDocs(ctx.directory);

@@ -26,23 +26,6 @@ export type McpToggles = {
   websearch?: boolean;
 };
 
-export type OptionalComponentKind = "background_agents" | "shell_strategy" | "mcp";
-
-export type OptionalComponentStatus = {
-  id: string;
-  kind: OptionalComponentKind;
-  enabled: boolean;
-  ready: boolean;
-  reason?: string;
-};
-
-export type OptionalComponentStatuses = {
-  degradeOptionalFailures: boolean;
-  backgroundAgents: OptionalComponentStatus;
-  shellStrategy: OptionalComponentStatus;
-  mcps: Record<string, OptionalComponentStatus>;
-};
-
 export type FallbackCandidateConfig = {
   model?: string;
   variant?: string;
@@ -68,14 +51,7 @@ export type MultiplexerConfig = {
   main_pane_size?: number;
 };
 
-export type TokenBudgetConfig = {
-  enabled?: boolean;
-  agentOverrides?: Record<string, { promptChars?: number; compactThreshold?: number; compactRepeat?: number }>;
-  globalCompactThreshold?: number;
-};
-
 export type HarnessConfig = {
-  token_budget?: TokenBudgetConfig;
   schema_version?: number;
   default_mode?: HarnessMode;
   set_default_agent?: boolean;
@@ -85,15 +61,11 @@ export type HarnessConfig = {
   };
   hooks?: {
     profile?: HookProfile;
-    comment_guard?: boolean;
     session_start?: boolean;
     pre_tool_use?: boolean;
     post_tool_use?: boolean;
-    pre_compact?: boolean;
     stop?: boolean;
     session_end?: boolean;
-    file_edited?: boolean;
-    prompt_refiner?: boolean;
   };
   mcps?: McpToggles;
   agents?: Record<string, AgentOverride>;

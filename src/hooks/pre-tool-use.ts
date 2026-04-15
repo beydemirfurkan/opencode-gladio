@@ -9,31 +9,6 @@ import {
   resolveToolName,
 } from "./runtime";
 
-const NODE_COMMAND_RE =
-  /^(npm|pnpm|yarn|bun|npx|bunx|node|tsc|tsx|vite|next|nuxt|vitest|jest|eslint|prettier)\b/;
-
-const NODE_MODULES_BIN_RE = /node_modules\/\.bin\//;
-
-function isNodeCommand(command: string): boolean {
-  return (
-    NODE_COMMAND_RE.test(command.trim()) || NODE_MODULES_BIN_RE.test(command)
-  );
-}
-
-function transformToCmd(command: string, winPath: string): string {
-  return `cmd.exe /c "cd ${winPath} && ${command}"`;
-}
-
-function hasRecentBuildCheck(recentTools: string[]): boolean {
-  return recentTools.some(
-    (t) =>
-      t.includes("tsc") ||
-      t.includes("typecheck") ||
-      t.includes("build") ||
-      t.includes("test"),
-  );
-}
-
 export function createPreToolUseHook(
   config: HarnessConfig,
   runtime: HookRuntime,
@@ -52,37 +27,8 @@ export function createPreToolUseHook(
 
       if (sessionID) {
         runtime.incrementToolCount(sessionID);
-        const agent =
-          runtime.getSessionAgent(sessionID) ?? resolveAgentName(input) ?? "polat";
-        const toolArgs = resolveToolArgs(input);
-        const command = typeof toolArgs.command === "string" ? toolArgs.command : "";
-        const textContent = typeof toolArgs.text === "string" ? toolArgs.text : "";
-        const estimatedInput = Math.ceil(`${command} ${textContent}`.length / 4);
-        runtime.tokenManager.trackUsage(sessionID, estimatedInput, 0);
       }
 
-      // ── WSL node command auto-transform ─────────────────────────
-      if (
-        tool === "bash" &&
-        runtime.isWsl() &&
-        typeof args.command === "string"
-      ) {
-        const command = args.command.trim();
-        if (isNodeCommand(command)) {
-          const transformed = transformToCmd(command, runtime.getWslWinPath());
-          (args as Record<string, unknown>).command = transformed;
-          runtime.appendObservation({
-            timestamp: new Date().toISOString(),
-            phase: "pre",
-            sessionID,
-            agent,
-            tool,
-            note: `wsl_auto_transform: ${command} -> cmd.exe`,
-          });
-        }
-      }
-
-      // ── Git push build gate ─────────────────────────────────────
       if (
         tool === "bash" &&
         typeof args.command === "string" &&
@@ -99,7 +45,6 @@ export function createPreToolUseHook(
         }
       }
 
-      // ── Track recent bash commands for build gate (per-session) ─
       if (tool === "bash" && typeof args.command === "string" && sessionID) {
         let cmds = recentBashBySession.get(sessionID);
         if (!cmds) {
@@ -112,23 +57,6 @@ export function createPreToolUseHook(
         }
       }
 
-      // ── Compact suggestion ──────────────────────────────────────
-      if (
-        sessionID &&
-        runtime.shouldSuggestCompact(sessionID) &&
-        profileMatches(profile, ["standard", "strict"])
-      ) {
-        runtime.appendObservation({
-          timestamp: new Date().toISOString(),
-          phase: "pre",
-          sessionID,
-          agent,
-          tool,
-          note: "compact_suggested",
-        });
-      }
-
-      // ── Observation logging ─────────────────────────────────────
       runtime.appendObservation({
         timestamp: new Date().toISOString(),
         phase: "pre",
@@ -138,4 +66,14 @@ export function createPreToolUseHook(
       });
     },
   };
+}
+
+function hasRecentBuildCheck(recentTools: string[]): boolean {
+  return recentTools.some(
+    (t) =>
+      t.includes("tsc") ||
+      t.includes("typecheck") ||
+      t.includes("build") ||
+      t.includes("test"),
+  );
 }

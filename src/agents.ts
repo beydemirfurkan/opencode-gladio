@@ -1,7 +1,6 @@
 import type { AgentLike, AgentOverride, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
 import { buildCoordinatorPrompt } from "./prompts/coordinator";
-import { truncatePromptAppend, getAgentBudget } from "./token-manager";
 import {
   buildChaosTesterPrompt,
   buildExecutionLeadPrompt,
@@ -21,19 +20,6 @@ function withOverride(
 ): AgentLike {
   if (!override) return base;
   return deepMerge(base, override);
-}
-
-function truncateOverridePrompt(
-  override?: AgentOverride,
-  agentName?: string,
-): AgentOverride | undefined {
-  if (!override) return undefined;
-  const maxPromptChars = agentName ? getAgentBudget(agentName).promptChars : 4000;
-  if (override.prompt_append) {
-    override.prompt_append = truncatePromptAppend(override.prompt_append, maxPromptChars);
-  }
-  if (Object.keys(override).length === 0) return undefined;
-  return override;
 }
 
 function taskPermissions(...allowedPatterns: string[]) {

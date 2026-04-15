@@ -7,7 +7,7 @@ import {
   maskHarnessConfigSecrets,
   type ResolvedHarnessConfig,
 } from "../config";
-import type { HarnessConfig, OptionalComponentStatuses } from "../types";
+import type { HarnessConfig } from "../types";
 import { resolveFallbackState } from "../fallbacks";
 
 const baseEffectiveConfig: HarnessConfig = {
@@ -18,25 +18,6 @@ const baseEffectiveConfig: HarnessConfig = {
     profile: "strict",
     session_start: false,
   },
-};
-
-const baseOptionalStatus: OptionalComponentStatuses = {
-  degradeOptionalFailures: true,
-  backgroundAgents: {
-    id: "background_agents",
-    kind: "background_agents",
-    enabled: false,
-    ready: false,
-    reason: "disabled",
-  },
-  shellStrategy: {
-    id: "shell_strategy",
-    kind: "shell_strategy",
-    enabled: false,
-    ready: false,
-    reason: "disabled",
-  },
-  mcps: {},
 };
 
 const baseResolved: ResolvedHarnessConfig = {
@@ -66,7 +47,6 @@ const baseResolved: ResolvedHarnessConfig = {
     },
   },
   projectConfig: {},
-  optionalComponentStatus: baseOptionalStatus,
   fallbackState: resolveFallbackState(baseEffectiveConfig),
 };
 

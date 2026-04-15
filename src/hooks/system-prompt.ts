@@ -12,12 +12,8 @@ export function createSystemPromptHook(runtime: HookRuntime) {
       if (agent !== "polat") return;
       const factsLine = runtime.buildProjectFactsLine();
       const modeLine = runtime.buildModeInjection();
-      const report = runtime.getTokenReport(sessionID);
-      const budgetLine = report
-        ? `[TokenBudget] ${report.budgetPercentUsed}% used (${report.estimatedTokens} / ${report.budget.compactThreshold}). Tools: ${report.toolCount}.`
-        : "";
-      const tierReminder = report ? `[Pipeline] ClarityGate→Tier→Execute. Ambiguous? Ask first. Clear? "Tier N because: <reason>" → act.` : "";
-      const injection = [factsLine, modeLine, budgetLine, tierReminder].filter(Boolean).join("\n\n");
+      const tierReminder = "[Pipeline] ClarityGate→Tier→Execute. Ambiguous? Ask first. Clear? \"Tier N because: <reason>\" → act.";
+      const injection = [factsLine, modeLine, tierReminder].filter(Boolean).join("\n\n");
       if (!injection) return;
       output.system[0] = output.system[0] ? `${injection}\n\n${output.system[0]}` : injection;
     },

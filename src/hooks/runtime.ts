@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import type { PluginInput } from "@opencode-ai/plugin";
-import { detectLocaleFromTexts, type SupportedLocale } from "../i18n";
 import type { HarnessConfig, HookProfile } from "../types";
 import { readText } from "../utils";
 import {
@@ -8,14 +7,10 @@ import {
   joinProjectFactLabels,
   type ProjectFacts,
 } from "../project-facts";
-import { TokenManager, type TokenBudgetConfig } from "../token-manager";
 
 type SessionState = {
   agent?: string;
-  locale?: SupportedLocale;
-  editedFiles: Set<string>;
   toolCount: number;
-  compactHintAt: number;
 };
 
 function estimateKey(directory: string): string {
@@ -89,29 +84,7 @@ export function resolveToolArgs(value: unknown): Record<string, unknown> {
     : {};
 }
 
-export function resolveFilePathFromArgs(args: Record<string, unknown>): string | undefined {
-  const value = args.filePath ?? args.path;
-  return typeof value === "string" ? value : undefined;
-}
-
-export function stringifyToolOutput(output: unknown): string {
-  if (typeof output === "string") return output;
-  if (typeof output === "number" || typeof output === "boolean") return String(output);
-  if (!output || typeof output !== "object") return "";
-  if ("text" in output && typeof (output as { text?: unknown }).text === "string") {
-    return (output as { text: string }).text;
-  }
-  if ("stdout" in output && typeof (output as { stdout?: unknown }).stdout === "string") {
-    return (output as { stdout: string }).stdout;
-  }
-  try {
-    return JSON.stringify(output);
-  } catch {
-    return "";
-  }
-}
-
-export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
+export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig) {
   const sessions = new Map<string, SessionState>();
   const projectFacts = detectProjectFacts(ctx.directory);
   const projectID = estimateKey(ctx.directory);
@@ -121,26 +94,13 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
         .replace(/^\/mnt\/(\w)/, (_, d: string) => `${d.toUpperCase()}:`)
         .replace(/\//g, "\\")
     : "";
-  const tokenManager = new TokenManager(config.token_budget ?? { enabled: true });
 
   function ensureSession(sessionID: string): SessionState {
     const existing = sessions.get(sessionID);
     if (existing) return existing;
-    const created: SessionState = {
-      editedFiles: new Set<string>(),
-      toolCount: 0,
-      compactHintAt: 0,
-    };
+    const created: SessionState = { toolCount: 0 };
     sessions.set(sessionID, created);
     return created;
-  }
-
-  function resolveLocale(sessionID?: string, ...texts: Array<string | undefined>): SupportedLocale {
-    if (sessionID) {
-      const state = sessions.get(sessionID);
-      if (state?.locale) return state.locale;
-    }
-    return detectLocaleFromTexts(...texts);
   }
 
   function buildModeInjection(): string {
@@ -161,7 +121,6 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
   return {
     detectProjectFacts: () => projectFacts,
     buildProjectFactsLine: () => buildProjectFactsLine(projectFacts),
-    estimateTokens: (chunks: string[]) => Math.ceil(chunks.join("\n").length / 4),
     prepareSessionContext: (sessionID: string) => {
       ensureSession(sessionID);
     },
@@ -170,39 +129,19 @@ export function createHookRuntime(ctx: PluginInput, config: HarnessConfig) {
       ensureSession(sessionID).agent = agent;
     },
     getSessionAgent: (sessionID: string) => sessions.get(sessionID)?.agent,
-    setSessionLocale: (sessionID: string, locale: SupportedLocale | undefined) => {
-      if (!locale) return;
-      ensureSession(sessionID).locale = locale;
-    },
-    getSessionLocale: (sessionID: string) => sessions.get(sessionID)?.locale,
-    resolveLocale,
-    rememberEditedFile: (sessionID: string, filePath: string) => {
-      ensureSession(sessionID).editedFiles.add(filePath);
-    },
-    getEditedFiles: (sessionID: string) => [...(sessions.get(sessionID)?.editedFiles ?? new Set<string>())].sort(),
     incrementToolCount: (sessionID: string) => {
       const state = ensureSession(sessionID);
       state.toolCount += 1;
       return state.toolCount;
     },
-    shouldSuggestCompact: (sessionID: string, _threshold = 50, _repeat = 25) => {
-      const agent = sessions.get(sessionID)?.agent;
-      return tokenManager.shouldCompact(sessionID, agent ?? "polat");
-    },
     clearSession: (sessionID: string) => {
       sessions.delete(sessionID);
-      tokenManager.clearSession(sessionID);
     },
     readText,
     appendObservation: (_input: unknown) => {},
     isWsl: () => wslMode,
     getWslWinPath: () => wslWinPath,
     buildModeInjection,
-    tokenManager,
-    getTokenReport: (sessionID: string) => {
-      const agent = sessions.get(sessionID)?.agent;
-      return tokenManager.getReport(sessionID, agent);
-    },
   };
 }
 

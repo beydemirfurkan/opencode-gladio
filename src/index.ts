@@ -5,7 +5,6 @@ import { createHarnessMcps } from "./mcp";
 import { createHarnessCommands } from "./commands";
 import { createHarnessHooks } from "./hooks";
 import { ForegroundFallbackManager } from "./fallback-manager";
-import { MultiplexerSessionManager } from "./multiplexer";
 
 const OpenCodeGladioPlugin: Plugin = async (ctx) => {
   const harnessConfig = loadHarnessConfig(ctx.directory);
@@ -14,9 +13,6 @@ const OpenCodeGladioPlugin: Plugin = async (ctx) => {
     ctx.client,
     harnessConfig.fallbacks?.chains ?? {},
     harnessConfig.fallbacks?.enabled !== false,
-  );
-  const multiplexerManager = new MultiplexerSessionManager(
-    harnessConfig.multiplexer ?? { type: "none" },
   );
 
   return {
@@ -44,9 +40,6 @@ const OpenCodeGladioPlugin: Plugin = async (ctx) => {
       ? {
           event: async (input) => {
             await fallbackManager.handleEvent(input.event as any);
-            await multiplexerManager.onSessionCreated(input.event as any);
-            await multiplexerManager.onSessionStatus(input.event as any);
-            await multiplexerManager.onSessionDeleted(input.event as any);
             await hooks.event?.(input);
           },
         }
@@ -57,13 +50,9 @@ const OpenCodeGladioPlugin: Plugin = async (ctx) => {
     ...(hooks["tool.execute.after"]
       ? { "tool.execute.after": hooks["tool.execute.after"] }
       : {}),
-    ...(hooks["file.edited"] ? { "file.edited": hooks["file.edited"] } : {}),
     ...(hooks["session.created"] ? { "session.created": hooks["session.created"] } : {}),
     ...(hooks["session.idle"] ? { "session.idle": hooks["session.idle"] } : {}),
     ...(hooks["session.deleted"] ? { "session.deleted": hooks["session.deleted"] } : {}),
-    ...(hooks["experimental.session.compacting"]
-      ? { "experimental.session.compacting": hooks["experimental.session.compacting"] }
-      : {}),
     ...(hooks["experimental.chat.system.transform"]
       ? {
           "experimental.chat.system.transform": hooks["experimental.chat.system.transform"],

@@ -1,7 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { LoadHarnessConfigOptions } from "./config";
-import type { OptionalComponentStatus } from "./types";
 import {
   CURRENT_HARNESS_SCHEMA_VERSION,
   loadResolvedHarnessConfig,
@@ -183,45 +182,6 @@ function checkManagedPlugins(
   };
 }
 
-function formatOptionalStatusDetail(status: OptionalComponentStatus): string {
-  if (!status.enabled) {
-    return `${status.id}: disabled (${status.reason ?? "disabled"})`;
-  }
-
-  if (status.ready) {
-    return `${status.id}: enabled and ready`;
-  }
-
-  return `${status.id}: enabled but degraded (${status.reason ?? "reason unavailable"})`;
-}
-
-function checkVendorReadiness(resolved: ResolvedHarnessConfig): DoctorCheck {
-  const statuses = [
-    resolved.optionalComponentStatus.backgroundAgents,
-    resolved.optionalComponentStatus.shellStrategy,
-    ...Object.values(resolved.optionalComponentStatus.mcps),
-  ];
-  const details = statuses.map(formatOptionalStatusDetail);
-  const hasDegraded = statuses.some((entry) => entry.enabled && !entry.ready);
-  const status: DoctorStatus = hasDegraded ? "WARN" : "PASS";
-
-  if (details.length === 0) {
-    details.push("No optional components configured.");
-  }
-
-  const summary =
-    status === "PASS"
-      ? "Optional components appear healthy."
-      : "Optional components degraded; check details.";
-
-  return {
-    name: "Vendor MCP readiness",
-    status,
-    summary,
-    details,
-  };
-}
-
 function describeCandidate(candidate: ResolvedRoleFallback["primaryCandidate"]): string {
   const model = candidate.model ?? "<unspecified model>";
   const variant = candidate.variant ?? "none";
@@ -289,7 +249,6 @@ export function runDoctor(options?: DoctorOptions): DoctorReport {
     checkConfig(resolved),
     checkInstallArtifacts(paths, mainConfig.path),
     checkManagedPlugins(paths, mainConfig.path),
-    checkVendorReadiness(resolved),
     checkAgentFallback(resolved),
   ];
   const overallStatus = checks.reduce<DoctorStatus>(
