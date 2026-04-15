@@ -33,19 +33,19 @@ describe("buildCoordinatorPrompt visibility guidance", () => {
   it("includes summary visibility guidance by default", () => {
     const prompt = buildCoordinatorPrompt();
 
-    expect(prompt).toContain("Keep orchestration visible");
+    expect(prompt).toContain("Short coordinator updates");
   });
 
   it("includes visible-mode guidance when workers may appear in the UI", () => {
     const prompt = buildCoordinatorPrompt(undefined, "visible");
 
-    expect(prompt).toContain("Workers may appear in the UI.");
+    expect(prompt).toContain("Workers visible in UI");
   });
 
   it("omits visibility guidance when mode is off", () => {
     const prompt = buildCoordinatorPrompt(undefined, "off");
 
-    expect(prompt).not.toContain("Keep orchestration visible");
-    expect(prompt).not.toContain("Workers may appear in the UI.");
+    expect(prompt).not.toContain("Short coordinator updates");
+    expect(prompt).not.toContain("Workers visible in UI");
   });
 });
