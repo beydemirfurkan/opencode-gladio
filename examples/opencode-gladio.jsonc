@@ -31,7 +31,7 @@
   },
   "agents": {
     "polat": {
-      "variant": "xhigh"
+      "variant": "high"
     },
     "cakir": {
       "variant": "none"
@@ -43,10 +43,10 @@
       "variant": "none"
     },
     "aslan-akbey": {
-      "variant": "xhigh"
+      "variant": "high"
     },
     "iskender": {
-      "variant": "xhigh"
+      "variant": "high"
     },
     "tuncay": {
       "variant": "high"

@@ -25,7 +25,7 @@ export type ResolvedFallbackState = {
 };
 
 export const DEFAULT_PRIMARY_CANDIDATES: Record<FallbackRole, FallbackCandidate> = {
-  coordinator: { variant: "xhigh" },
+  coordinator: { variant: "high" },
   verifier: { variant: "none" },
 };
 

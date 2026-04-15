@@ -150,7 +150,7 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Aslan Akbey — Senior reviewer. Correctness, maintainability.",
-        variant: "xhigh",
+        variant: "high",
         prompt: buildReviewerPrompt(overrides["aslan-akbey"]?.prompt_append),
         temperature: 0.1,
         color: "#E74C3C",
@@ -169,7 +169,7 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "İskender — Adversarial reviewer. Security, race conditions, misuse.",
-        variant: "xhigh",
+        variant: "high",
         prompt: buildAdversarialReviewerPrompt(overrides.iskender?.prompt_append),
         temperature: 0.4,
         color: "#9B59B6",

@@ -8,7 +8,7 @@ describe("Fallback helpers", () => {
       agents: {
         polat: {
           model: "zai/glm-5.1",
-          variant: "xhigh",
+          variant: "high",
         },
         halit: {
           variant: "none",
@@ -32,7 +32,7 @@ describe("Fallback helpers", () => {
 
     expect(state.coordinator.selectedSource).toBe("primary");
     expect(state.coordinator.selectedCandidate.model).toBeUndefined();
-    expect(state.coordinator.selectedCandidate.variant).toBe("xhigh");
+    expect(state.coordinator.selectedCandidate.variant).toBe("high");
     expect(state.coordinator.degraded).toBe(false);
   });
 

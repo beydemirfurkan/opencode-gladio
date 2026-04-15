@@ -90,12 +90,12 @@ All agents use your OpenCode default model unless overridden in config.
 
 | Agent | Role | Variant | When |
 |-------|------|---------|------|
-| **Polat** | Coordinator | xhigh | Always active |
+| **Polat** | Coordinator | high | Always active |
 | **Çakır** | Execution lead | none | Complex decomposition |
 | **Memati** | Implementer | high | Tier 2+ |
 | **Abdülhey** | Researcher | none | Docs, APIs, evidence |
-| **Aslan Akbey** | Correctness reviewer | xhigh | Tier 3+ review |
-| **İskender** | Adversarial reviewer | xhigh | Tier 3+ review |
+| **Aslan Akbey** | Correctness reviewer | high | Tier 3+ review |
+| **İskender** | Adversarial reviewer | high | Tier 3+ review |
 | **Tuncay** | Repair specialist | high | Review rejection |
 | **Halit** | Verifier | none | Build/test PASS/FAIL |
 | **Güllü Erhan** | Frontend specialist | high | UI/UX tasks |
@@ -161,7 +161,7 @@ Override any agent's model, variant, or prompt. Works with any provider configur
 ```jsonc
 {
   "agents": {
-    "polat": { "model": "zai/glm-5.1", "variant": "xhigh" },
+    "polat": { "model": "zai/glm-5.1", "variant": "high" },
     "memati": { "model": "anthropic/claude-sonnet-4-20250514" },
     "halit": { "model": "opencode-go/kimi-k2.5" },
     "abdulhey": {
@@ -211,7 +211,7 @@ Three remote MCP servers are available (all enabled by default):
   "fallbacks": { "enabled": true, "chains": {} },
   "multiplexer": { "type": "none" },
   "agents": {
-    "polat": { "model": "zai/glm-5.1", "variant": "xhigh" },
+    "polat": { "model": "zai/glm-5.1", "variant": "high" },
     "memati": { "model": "anthropic/claude-sonnet-4-20250514" },
     "halit": { "model": "opencode-go/kimi-k2.5" }
   }
