@@ -99,12 +99,12 @@ export class ForegroundFallbackManager {
     if (!chain) return;
 
     const now = Date.now();
-    if (now - chain.lastFailureAt < RATE_LIMIT_COOLDOWN_MS) return;
-
-    chain.lastFailureAt = now;
     const nextIndex = (chain.currentIndex + 1) % chain.models.length;
 
     if (nextIndex === chain.currentIndex) return;
+    if (now - chain.lastFailureAt < RATE_LIMIT_COOLDOWN_MS && nextIndex !== 0) return;
+
+    chain.lastFailureAt = now;
 
     const nextModel = chain.models[nextIndex];
     chain.currentIndex = nextIndex;

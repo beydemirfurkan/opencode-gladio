@@ -1,7 +1,8 @@
 import type { AgentLike, AgentOverride, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
 import { buildCoordinatorPrompt } from "./prompts/coordinator";
-import { truncatePromptAppend, getAgentBudget, resolveEffectiveBudget } from "./token-manager";
+import { truncatePromptAppend, getAgentBudget } from "./token-manager";
+import { resolveAgentModel, resolveAgentVariant, getEffectiveModel } from "./tier-router";
 import {
   buildChaosTesterPrompt,
   buildExecutionLeadPrompt,
@@ -98,8 +99,8 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Çakır — Execution lead. Breaks plans into tasks and routes specialists.",
-        model: "openai/gpt-5.4",
-        variant: "high",
+        model: "openai/gpt-5.4-mini",
+        variant: "none",
         prompt: buildExecutionLeadPrompt(overrides.cakir?.prompt_append),
         temperature: 0.3,
         color: "#3498DB",
@@ -141,7 +142,7 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Abdülhey — Researcher for docs, APIs, rationale.",
-        model: "openai/gpt-5.4",
+        model: "openai/gpt-5.4-mini",
         variant: "none",
         prompt: buildResearcherPrompt(overrides.abdulhey?.prompt_append),
         temperature: 0.3,
@@ -196,7 +197,7 @@ export function createHarnessAgents(
         mode: "subagent",
         hidden: workersHidden,
         description: "Tuncay — Scoped failure repair agent.",
-        model: "openai/gpt-5.4",
+        model: "openai/gpt-5.4-mini",
         variant: "high",
         prompt: buildRepairPrompt(overrides.tuncay?.prompt_append),
         temperature: 0.1,
@@ -257,7 +258,7 @@ export function createHarnessAgents(
         hidden: workersHidden,
         description:
           "Pala — Chaos tester. Edge cases, misuse, race hunting.",
-        model: "openai/gpt-5.4",
+        model: "openai/gpt-5.4-mini",
         variant: "high",
         prompt: buildChaosTesterPrompt(overrides.pala?.prompt_append),
         temperature: 0.45,

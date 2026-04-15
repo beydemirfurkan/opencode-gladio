@@ -62,11 +62,18 @@ function prepareDoctorEnvironment(
     "utf8",
   );
 
+  const userConfigPath = join(root, "user-opencode-gladio.jsonc");
+  writeFileSync(
+    userConfigPath,
+    JSON.stringify({ schema_version: schemaVersion }, null, 2),
+    "utf8",
+  );
+
   const configDirOptions: DoctorOptions = {
     configDir,
     projectDirectory: projectDir,
     projectConfigPath,
-    userConfigPath: join(root, "user-opencode-gladio.jsonc"),
+    userConfigPath,
   };
 
   const previousConfigDir = process.env.OPENCODE_CONFIG_DIR;
