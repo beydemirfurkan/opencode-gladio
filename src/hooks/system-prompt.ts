@@ -16,7 +16,8 @@ export function createSystemPromptHook(runtime: HookRuntime) {
       const budgetLine = report
         ? `[TokenBudget] ${report.budgetPercentUsed}% used (${report.estimatedTokens} / ${report.budget.compactThreshold}). Tools: ${report.toolCount}.`
         : "";
-      const injection = [factsLine, modeLine, budgetLine].filter(Boolean).join("\n\n");
+      const tierReminder = `[Pipeline] ClarityGate → TierPipeline → Execute. If the task is ambiguous, ask focused questions BEFORE classifying tier. If clear, state "Tier N because: <reason>" and act.`;
+      const injection = [factsLine, modeLine, budgetLine, tierReminder].filter(Boolean).join("\n\n");
       if (!injection) return;
       output.system[0] = output.system[0] ? `${injection}\n\n${output.system[0]}` : injection;
     },

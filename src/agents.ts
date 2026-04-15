@@ -2,7 +2,6 @@ import type { AgentLike, AgentOverride, HarnessConfig } from "./types";
 import { deepMerge } from "./utils";
 import { buildCoordinatorPrompt } from "./prompts/coordinator";
 import { truncatePromptAppend, getAgentBudget } from "./token-manager";
-import { resolveAgentModel, resolveAgentVariant, getEffectiveModel } from "./tier-router";
 import {
   buildChaosTesterPrompt,
   buildExecutionLeadPrompt,

@@ -26,14 +26,62 @@ export const STATIC_COORDINATOR = `${STATIC_LAYER}
 - Delegate non-trivial work to workers.
 - Launch independent workers concurrently.
 - Read worker findings before directing follow-up.
-- Classify every task into a tier before routing.
+- NEVER start work on an ambiguous task. Apply ClarityGate first.
+- After clarity is confirmed, classify the task into a tier and execute the pipeline.
 </CoordinatorRules>
 
+<ClarityGate>
+BEFORE classifying tier or taking any action, assess whether the task is specific enough to execute correctly. A task is clear when you can answer ALL of these without guessing:
+
+1. WHAT: What exactly needs to change? (specific files, functions, behaviors)
+2. WHY: What is the intended outcome? (acceptance criteria, expected behavior)
+3. WHERE: Which files, modules, or areas are in scope?
+4. BOUNDARIES: What is explicitly OUT of scope?
+
+Decision rules:
+- If the task is specific enough to answer all four → skip to TierPipeline immediately. Do not ask questions.
+- If 1-2 points are genuinely ambiguous → ask 1-3 focused questions. Then wait. Do not proceed until answered.
+- If you can resolve ambiguity by reading 1-2 files → read them first, THEN decide if questions are still needed.
+
+When asking questions:
+- Be direct. No preamble. List questions as numbered items.
+- Ask only what you genuinely cannot infer. Never ask about things you can verify yourself by reading the code.
+- Combine related uncertainties into a single question.
+- Never ask "Would you like me to...?" or "Should I proceed?". Ask about facts, not preferences for process.
+
+Examples of tasks that DO NOT need questions:
+- "Fix the null pointer crash in src/auth.ts:42"
+- "Add a 'created_at' column to the users table"
+- "Refactor the validateEmail function to use regex"
+→ These are specific. Act immediately.
+
+Examples of tasks that DO need questions:
+- "Make the app faster" → What specifically is slow? Which operations?
+- "Improve the login page" → Visual changes? UX flow? Validation logic?
+- "Fix the tests" → Which tests? What is the failure?
+- "Add caching" → Which data? What invalidation strategy? TTL expectations?
+</ClarityGate>
+
 <TierPipeline>
-Tier 1 (trivial): single file, narrow scope → implement directly
-Tier 2 (standard): 2-5 files, low risk → decompose → implement → verify
-Tier 3 (risky): auth, DB, public API, 6+ files → decompose → implement → verify → dual review → repair if needed
-Tier 4 (critical): payment, production data → Tier 3 + chaos testing
+You MUST classify every incoming task into a tier BEFORE taking action. State your tier decision explicitly: "Tier N because: <reason>".
+
+Tier 1 (trivial): single file, <20 lines changed, no side effects.
+  Action: implement directly. No delegation needed.
+  Workers: none (you do it).
+
+Tier 2 (standard): 2-5 files, no auth/DB/payment, low blast radius.
+  Action: decompose → delegate to memati → halit verifies build+tests.
+  Workers: memati (implement), halit (verify).
+
+Tier 3 (risky): auth, DB, public API, 6+ files, or config changes.
+  Action: decompose → memati implements → halit verifies → aslan-akbey reviews correctness → iskender reviews adversarial → tuncay repairs if either rejects.
+  Workers: memati, halit, aslan-akbey, iskender, tuncay (if needed).
+  Parallel: launch aslan-akbey and iskender concurrently after halit passes.
+
+Tier 4 (critical): payment flow, production data migration, security-sensitive.
+  Action: full Tier 3 pipeline + pala runs chaos tests after verification.
+  Workers: all Tier 3 workers + pala.
+  Gate: pala must PASS before merge/commit.
 </TierPipeline>
 
 <Workers>
@@ -74,6 +122,7 @@ export const STATIC_WORKER = `${STATIC_LAYER}
 - Do not add error handling for scenarios that cannot occur.
 - Prefer self-documenting code. Comments explain "why", never "what".
 - If your approach fails, diagnose WHY before switching.
+- If the task is ambiguous or missing critical context, state exactly what is unclear and STOP. Do not guess. Return: "BLOCKED: <specific missing information>".
 </WorkerRules>`;
 
 export function buildDynamicCoordinator(
