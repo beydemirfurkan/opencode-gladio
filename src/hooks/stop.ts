@@ -12,20 +12,11 @@ export function createStopHook(_ctx: PluginInput, config: HarnessConfig, runtime
       if (!sessionID) return;
 
       if (memory && config.memory?.enabled !== false) {
-        const phase = runtime.getPhase(sessionID);
-        const toolCount = runtime.getToolCount(sessionID);
-        const agent = runtime.getSessionAgent(sessionID);
+        const status = runtime.getPhase(sessionID) === "complete" ? "completed" : "interrupted";
+        const snapshot = runtime.buildPipelineSnapshot(sessionID, status);
 
-        if (toolCount > 0) {
-          memory.savePipelineState({
-            ended_at: new Date().toISOString(),
-            task: "",
-            tier: 0,
-            phase,
-            workers_used: agent ? [agent] : [],
-            files_modified: [],
-            status: phase === "complete" ? "completed" : "interrupted",
-          });
+        if (snapshot) {
+          memory.savePipelineState(snapshot);
         }
       }
 

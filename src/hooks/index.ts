@@ -146,7 +146,7 @@ export async function createHarnessHooks(ctx: PluginInput, config: HarnessConfig
     createSessionEndHook(config, runtime),
   );
   registerHook("system_prompt", true, () => createSystemPromptHook(runtime));
-  registerHook("phase_reminder", config.hooks?.phase_reminder !== false, () =>
+  registerHook("phase_reminder", true, () =>
     createPhaseReminderHook(config, runtime),
   );
   registerHook("apply_patch", config.hooks?.apply_patch_rescue !== false, () =>

@@ -15,6 +15,21 @@ type ChatMessageOutput = {
   parts?: Array<{ type?: string; text?: string }>;
 };
 
+function persistProjectFacts(config: HarnessConfig, runtime: HookRuntime): void {
+  const memory = runtime.getMemory();
+  if (!memory || config.memory?.enabled === false) return;
+
+  memory.ensureDirectory();
+  const facts = runtime.getProjectFacts();
+  memory.ensureProjectFacts({
+    languages: facts.languages,
+    frameworks: facts.frameworks,
+    package_manager: facts.packageManager,
+    test_runner: "unknown",
+    build_tool: "unknown",
+  });
+}
+
 function detectProjectDocs(directory: string): string[] {
   const candidates = ["AGENTS.md", "README.md", "CONTRIBUTING.md", "ARCHITECTURE.md"];
   return candidates.filter((name) => existsSync(join(directory, name)));
@@ -25,27 +40,17 @@ export function createSessionStartHook(
   config: HarnessConfig,
   runtime: HookRuntime,
 ) {
-  const memory = runtime.getMemory();
-
   return {
     "session.created": async (input?: unknown): Promise<void> => {
       const sessionID = resolveSessionOrEntityID(input);
       if (!sessionID) return;
       runtime.prepareSessionContext(sessionID);
-
-      if (memory && config.memory?.enabled !== false) {
-        memory.ensureDirectory();
-        const facts = runtime.getProjectFacts();
-        memory.saveProjectFacts({
-          languages: facts.languages,
-          frameworks: facts.frameworks,
-          package_manager: facts.packageManager,
-          test_runner: "unknown",
-          build_tool: "unknown",
-        });
-      }
+      persistProjectFacts(config, runtime);
     },
     "chat.message": async (input: ChatMessageInput, output: ChatMessageOutput): Promise<void> => {
+      runtime.prepareSessionContext(input.sessionID);
+      persistProjectFacts(config, runtime);
+
       const agentName = input.agent ?? (typeof output.message.agent === "string" ? output.message.agent : undefined);
       runtime.setSessionAgent(input.sessionID, agentName);
 
@@ -53,6 +58,7 @@ export function createSessionStartHook(
       const docs = detectProjectDocs(ctx.directory);
       const docsLine = docs.length > 0 ? `[ProjectDocs] Available: ${docs.join(", ")}` : "";
 
+      const memory = runtime.getMemory();
       const memoryLine = memory && config.memory?.inject_summary !== false
         ? memory.buildInjectionLine()
         : "";

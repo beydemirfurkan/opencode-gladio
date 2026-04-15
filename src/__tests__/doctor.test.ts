@@ -21,6 +21,9 @@ function prepareDoctorEnvironment(
     schemaVersion?: number;
     pluginEntries?: (paths: ReturnType<typeof getConfigPaths>) => string[];
     omitDist?: boolean;
+    omitMemoryDir?: boolean;
+    omitProjectFacts?: boolean;
+    omitPipelineState?: boolean;
   },
 ): { options: DoctorOptions; configDir: string; cleanup: () => void } {
   const root = mkdtempSync(join(tmpdir(), "doctor-"));
@@ -62,6 +65,32 @@ function prepareDoctorEnvironment(
     JSON.stringify({ schema_version: schemaVersion }, null, 2),
     "utf8",
   );
+
+  if (!overrides?.omitMemoryDir) {
+    const memoryDir = join(projectDir, ".gladio");
+    mkdirSync(memoryDir, { recursive: true });
+    writeFileSync(
+      join(memoryDir, "context.json"),
+      JSON.stringify({ schema_version: 1, project_id: "p1", last_updated: new Date().toISOString(), learnings: [] }, null, 2),
+      "utf8",
+    );
+
+    if (!overrides?.omitProjectFacts) {
+      writeFileSync(
+        join(memoryDir, "project.json"),
+        JSON.stringify({ schema_version: 1, facts: { languages: ["typescript"], frameworks: [], package_manager: "npm", test_runner: "unknown", build_tool: "unknown" }, key_directories: {} }, null, 2),
+        "utf8",
+      );
+    }
+
+    if (!overrides?.omitPipelineState) {
+      writeFileSync(
+        join(memoryDir, "pipeline-state.json"),
+        JSON.stringify({ schema_version: 1, last_session: null }, null, 2),
+        "utf8",
+      );
+    }
+  }
 
   const userConfigPath = join(root, "user-opencode-gladio.jsonc");
   writeFileSync(
@@ -144,6 +173,8 @@ describe("Doctor command helpers", () => {
       expect(report.overallStatus).toBe("PASS");
       const managedCheck = report.checks.find((check) => check.name === "Managed plugins");
       expect(managedCheck?.status).toBe("PASS");
+      const persistenceCheck = report.checks.find((check) => check.name === "Persistence health");
+      expect(persistenceCheck?.status).toBe("PASS");
     } finally {
       cleanup();
     }
@@ -158,6 +189,23 @@ describe("Doctor command helpers", () => {
       expect(installCheck?.details).toEqual([
         "Config directory and harness artifacts present.",
       ]);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("warns when persistence files are incomplete", () => {
+    const { options, cleanup } = prepareDoctorEnvironment({
+      omitProjectFacts: true,
+      omitPipelineState: true,
+    });
+    try {
+      const report = runDoctor(options);
+      expect(report.overallStatus).toBe("WARN");
+      const persistenceCheck = report.checks.find((check) => check.name === "Persistence health");
+      expect(persistenceCheck?.status).toBe("WARN");
+      expect(persistenceCheck?.details.some((detail) => detail.includes("Missing project facts file"))).toBe(true);
+      expect(persistenceCheck?.details.some((detail) => detail.includes("Missing pipeline state file"))).toBe(true);
     } finally {
       cleanup();
     }

@@ -69,4 +69,50 @@ describe("MemoryStore", () => {
       rmSync(projectDir, { recursive: true, force: true });
     }
   });
+
+  it("bootstraps context and pipeline files when ensuring the directory", () => {
+    const projectDir = createTempProject();
+
+    try {
+      const memory = new MemoryStore(projectDir, { dir: ".gladio" });
+      memory.ensureDirectory();
+
+      expect(memory.loadContext().project_id).not.toBe("");
+      expect(memory.loadPipelineState().last_session).toBeNull();
+    } finally {
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fills missing project facts without overwriting known values", () => {
+    const projectDir = createTempProject();
+
+    try {
+      const memory = new MemoryStore(projectDir, { dir: ".gladio" });
+      memory.saveProjectFacts({
+        languages: [],
+        frameworks: [],
+        package_manager: "unknown",
+        test_runner: "vitest",
+        build_tool: "unknown",
+      });
+
+      memory.ensureProjectFacts({
+        languages: ["typescript"],
+        frameworks: ["vite"],
+        package_manager: "npm",
+        test_runner: "unknown",
+        build_tool: "tsup",
+      });
+
+      const project = memory.loadProjectFacts();
+      expect(project.facts.package_manager).toBe("npm");
+      expect(project.facts.languages).toEqual(["typescript"]);
+      expect(project.facts.frameworks).toEqual(["vite"]);
+      expect(project.facts.test_runner).toBe("vitest");
+      expect(project.facts.build_tool).toBe("tsup");
+    } finally {
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
 });

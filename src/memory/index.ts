@@ -67,6 +67,16 @@ function ensureDir(dir: string): void {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 }
 
+function arraysEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function recordsEqual(left: Record<string, string>, right: Record<string, string>): boolean {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  return leftKeys.length === rightKeys.length && leftKeys.every((key) => left[key] === right[key]);
+}
+
 function readJsonFile<T>(filePath: string, fallback: T): T {
   if (!existsSync(filePath)) return fallback;
   try {
@@ -266,6 +276,42 @@ export class MemoryStore {
     );
   }
 
+  ensureProjectFacts(
+    facts: ProjectFactsFile["facts"],
+    keyDirectories?: Record<string, string>,
+  ): void {
+    const current = this.loadProjectFacts();
+    const nextFacts: ProjectFactsFile["facts"] = {
+      languages: current.facts.languages.length > 0 ? current.facts.languages : facts.languages,
+      frameworks: current.facts.frameworks.length > 0 ? current.facts.frameworks : facts.frameworks,
+      package_manager: current.facts.package_manager !== "unknown"
+        ? current.facts.package_manager
+        : facts.package_manager,
+      test_runner: current.facts.test_runner !== "unknown"
+        ? current.facts.test_runner
+        : facts.test_runner,
+      build_tool: current.facts.build_tool !== "unknown"
+        ? current.facts.build_tool
+        : facts.build_tool,
+    };
+    const nextKeyDirectories = Object.keys(current.key_directories).length > 0
+      ? current.key_directories
+      : (keyDirectories ?? {});
+
+    if (
+      arraysEqual(current.facts.languages, nextFacts.languages) &&
+      arraysEqual(current.facts.frameworks, nextFacts.frameworks) &&
+      current.facts.package_manager === nextFacts.package_manager &&
+      current.facts.test_runner === nextFacts.test_runner &&
+      current.facts.build_tool === nextFacts.build_tool &&
+      recordsEqual(current.key_directories, nextKeyDirectories)
+    ) {
+      return;
+    }
+
+    this.saveProjectFacts(nextFacts, nextKeyDirectories);
+  }
+
   buildInjectionLine(): string {
     const contextExists = existsSync(join(this.dir, "context.json"));
     const pipelineExists = existsSync(join(this.dir, "pipeline-state.json"));
@@ -301,6 +347,16 @@ export class MemoryStore {
 
   ensureDirectory(): void {
     ensureDir(this.dir);
+
+    const contextPath = join(this.dir, "context.json");
+    if (!existsSync(contextPath)) {
+      writeJsonFile(contextPath, createEmptyContext(this.projectId));
+    }
+
+    const pipelinePath = join(this.dir, "pipeline-state.json");
+    if (!existsSync(pipelinePath)) {
+      writeJsonFile(pipelinePath, createEmptyPipeline());
+    }
   }
 
   getDirectory(): string {

@@ -119,5 +119,6 @@ describe("phase-reminder", () => {
     );
 
     expect(messages[0].content).toBe("Implementing");
+    expect(runtime.getPhase("p6")).toBe("execute");
   });
 });

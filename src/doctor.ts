@@ -7,6 +7,7 @@ import {
   type ResolvedHarnessConfig,
 } from "./config";
 import type { ResolvedRoleFallback } from "./fallbacks";
+import { resolveMemoryConfig } from "./memory";
 import {
   buildManagedPluginEntries,
   detectMainConfigPath,
@@ -229,6 +230,59 @@ function checkAgentFallback(resolved: ResolvedHarnessConfig): DoctorCheck {
   };
 }
 
+function checkPersistence(
+  resolved: ResolvedHarnessConfig,
+  projectDirectory: string,
+): DoctorCheck {
+  const memoryConfig = resolveMemoryConfig(resolved.effectiveConfig);
+  if (memoryConfig.enabled === false) {
+    return {
+      name: "Persistence health",
+      status: "PASS",
+      summary: "Persistence is disabled by config.",
+      details: ["memory.enabled=false"],
+    };
+  }
+
+  const memoryDir = join(projectDirectory, memoryConfig.dir ?? ".gladio");
+  const contextPath = join(memoryDir, "context.json");
+  const pipelinePath = join(memoryDir, "pipeline-state.json");
+  const projectPath = join(memoryDir, "project.json");
+  const details: string[] = [];
+  let status: DoctorStatus = "PASS";
+
+  if (!existsSync(memoryDir)) {
+    status = "WARN";
+    details.push(`Memory directory missing: ${memoryDir}`);
+  } else {
+    if (!existsSync(contextPath)) {
+      status = mergeStatus(status, "WARN");
+      details.push(`Missing context file: ${contextPath}`);
+    }
+    if (!existsSync(projectPath)) {
+      status = mergeStatus(status, "WARN");
+      details.push(`Missing project facts file: ${projectPath}`);
+    }
+    if (!existsSync(pipelinePath)) {
+      status = mergeStatus(status, "WARN");
+      details.push(`Missing pipeline state file: ${pipelinePath}`);
+    }
+  }
+
+  if (details.length === 0) {
+    details.push(`Memory directory ready: ${memoryDir}`);
+  }
+
+  return {
+    name: "Persistence health",
+    status,
+    summary: status === "PASS"
+      ? "Persistence files look healthy."
+      : "Persistence is enabled but bootstrap or session artifacts are incomplete.",
+    details,
+  };
+}
+
 export function runDoctor(options?: DoctorOptions): DoctorReport {
   const projectDirectory = options?.projectDirectory ?? process.cwd();
   const loadOptions: LoadHarnessConfigOptions = {
@@ -244,6 +298,7 @@ export function runDoctor(options?: DoctorOptions): DoctorReport {
     checkInstallArtifacts(paths, mainConfig.path),
     checkManagedPlugins(paths, mainConfig.path),
     checkAgentFallback(resolved),
+    checkPersistence(resolved, projectDirectory),
   ];
   const overallStatus = checks.reduce<DoctorStatus>(
     (current, next) => mergeStatus(current, next.status),

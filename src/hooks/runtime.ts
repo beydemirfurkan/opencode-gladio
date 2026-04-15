@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import type { PluginInput } from "@opencode-ai/plugin";
 import type { HarnessConfig, HookProfile, HooksConfig } from "../types";
-import type { MemoryStore } from "../memory";
+import type { MemoryStore, PipelineStateFile } from "../memory";
 import { readText } from "../utils";
 import {
   detectProjectFacts,
@@ -117,6 +117,17 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig, memo
         .replace(/\//g, "\\")
     : "";
 
+  if (memory?.isEnabled()) {
+    memory.ensureDirectory();
+    memory.ensureProjectFacts({
+      languages: projectFacts.languages,
+      frameworks: projectFacts.frameworks,
+      package_manager: projectFacts.packageManager,
+      test_runner: "unknown",
+      build_tool: "unknown",
+    });
+  }
+
   function ensureSession(sessionID: string): SessionState {
     const existing = sessions.get(sessionID);
     if (existing) return existing;
@@ -178,6 +189,31 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig, memo
     return sessions.get(sessionID)?.phase ?? "unknown";
   }
 
+  function buildPipelineSnapshot(
+    sessionID: string,
+    status: PipelineStateFile["last_session"] extends infer T
+      ? T extends { status: infer S }
+        ? S
+        : never
+      : never,
+  ): PipelineStateFile["last_session"] {
+    const session = sessions.get(sessionID);
+    if (!session) return null;
+
+    const hasMeaningfulActivity = session.toolCount > 0 || Boolean(session.agent) || session.phase !== "unknown";
+    if (!hasMeaningfulActivity) return null;
+
+    return {
+      ended_at: new Date().toISOString(),
+      task: "",
+      tier: 0,
+      phase: session.phase,
+      workers_used: session.agent ? [session.agent] : [],
+      files_modified: [],
+      status,
+    };
+  }
+
   function getDelegateRetryCount(sessionID: string, taskKey: string): number {
     const session = sessions.get(sessionID);
     if (!session) return 0;
@@ -221,6 +257,7 @@ export function createHookRuntime(ctx: PluginInput, _config: HarnessConfig, memo
     updatePhase,
     getPhase,
     getPhaseStuckCount,
+    buildPipelineSnapshot,
     getDelegateRetryCount,
     incrementDelegateRetry,
     setLastNudge: (sessionID: string, nudge: string) => {

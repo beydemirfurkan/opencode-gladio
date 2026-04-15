@@ -103,6 +103,14 @@ Generated files:
 - `.gladio/pipeline-state.json`
 - `.gladio/project.json`
 
+What they store:
+
+- `context.json`: saved learnings from `gladio-learn`
+- `pipeline-state.json`: last persisted session snapshot
+- `project.json`: detected project facts like package manager, languages, frameworks
+
+These files are bootstrapped automatically when Gladio initializes for a project. `pipeline-state.json` may remain empty until a session actually runs.
+
 Built-in tools:
 
 - `gladio-learn`

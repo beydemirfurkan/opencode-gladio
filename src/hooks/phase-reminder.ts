@@ -5,14 +5,13 @@ import { resolveHooksConfig } from "./runtime";
 export function createPhaseReminderHook(config: HarnessConfig, runtime: HookRuntime) {
   const hooksConfig = resolveHooksConfig(config);
   const stuckThreshold = hooksConfig.stuck_threshold ?? 5;
+  const reminderEnabled = hooksConfig.phase_reminder !== false;
 
   return {
     "experimental.chat.messages.transform": async (
       input: { sessionID?: string },
       output: { messages?: Array<{ role?: string; content?: string }> },
     ): Promise<void> => {
-      if (hooksConfig.phase_reminder === false) return;
-
       const sessionID = input.sessionID;
       if (!sessionID) return;
       if (!output.messages || !Array.isArray(output.messages)) return;
@@ -23,6 +22,8 @@ export function createPhaseReminderHook(config: HarnessConfig, runtime: HookRunt
       const content = lastMsg.content;
       const phase = runtime.updatePhase(sessionID, content);
       const stuckCount = runtime.getPhaseStuckCount(sessionID);
+
+      if (!reminderEnabled) return;
 
       if (phase !== "unknown" && phase !== "complete") {
         lastMsg.content = `[Phase: ${phase}] ${lastMsg.content}`;

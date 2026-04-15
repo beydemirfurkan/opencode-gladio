@@ -14,6 +14,7 @@ import {
   runDoctor,
 } from "./doctor";
 import { MemoryStore, resolveMemoryConfig } from "./memory";
+import { detectProjectFacts } from "./project-facts";
 
 type MemoryCommandOptions = {
   json?: boolean;
@@ -84,7 +85,19 @@ function showConfig(options?: { json?: boolean; sources?: boolean }): void {
 
 export function createCliMemoryStore(projectDirectory: string = process.cwd()): MemoryStore {
   const resolved = loadResolvedHarnessConfig(projectDirectory);
-  return new MemoryStore(projectDirectory, resolveMemoryConfig(resolved.effectiveConfig));
+  const memory = new MemoryStore(projectDirectory, resolveMemoryConfig(resolved.effectiveConfig));
+  memory.ensureDirectory();
+
+  const facts = detectProjectFacts(projectDirectory);
+  memory.ensureProjectFacts({
+    languages: facts.languages,
+    frameworks: facts.frameworks,
+    package_manager: facts.packageManager,
+    test_runner: "unknown",
+    build_tool: "unknown",
+  });
+
+  return memory;
 }
 
 export function formatMemoryShowText(memory: MemoryStore): string {
