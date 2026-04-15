@@ -55,6 +55,8 @@ describe("Fallback helpers", () => {
   it("maps fallback chains by agent name", () => {
     const config: HarnessConfig = {
       fallbacks: {
+        coordinator: [],
+        verifier: [],
         chains: {
           polat: ["zai/glm-5.1", "openai/gpt-5.4"],
           halit: ["opencode-go/kimi-k2.5"],
@@ -70,6 +72,28 @@ describe("Fallback helpers", () => {
     ]);
     expect(state.verifier.configuredFallbacks).toEqual([
       { model: "opencode-go/kimi-k2.5" },
+    ]);
+  });
+
+  it("prefers explicit role fallbacks over chains", () => {
+    const config: HarnessConfig = {
+      fallbacks: {
+        coordinator: [{ model: "openai/gpt-5.4" }],
+        verifier: [{ model: "zai/glm-5.1" }],
+        chains: {
+          polat: ["opencode-go/kimi-k2.5"],
+          halit: ["openai/gpt-5.4"],
+        },
+      },
+    };
+
+    const state = resolveFallbackState(config);
+
+    expect(state.coordinator.configuredFallbacks).toEqual([
+      { model: "openai/gpt-5.4" },
+    ]);
+    expect(state.verifier.configuredFallbacks).toEqual([
+      { model: "zai/glm-5.1" },
     ]);
   });
 });

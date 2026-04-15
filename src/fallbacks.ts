@@ -79,7 +79,11 @@ function buildConfiguredFallbacks(
   config: HarnessConfig,
 ): FallbackCandidate[] {
   const agentName = role === "coordinator" ? "polat" : "halit";
-  const configured = config.fallbacks?.[role] ?? config.fallbacks?.chains?.[agentName];
+  const configuredForRole = config.fallbacks?.[role];
+  const configured =
+    Array.isArray(configuredForRole) && configuredForRole.length > 0
+      ? configuredForRole
+      : config.fallbacks?.chains?.[agentName];
 
   if (Array.isArray(configured)) {
     return configured.map((entry) => normalizeFallbackEntry(entry));
