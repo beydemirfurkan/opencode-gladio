@@ -51,4 +51,25 @@ describe("Fallback helpers", () => {
     expect(state.coordinator.configuredFallbacks).toHaveLength(1);
     expect(state.coordinator.configuredFallbacks[0].model).toBe("anthropic/claude-sonnet-4-20250514");
   });
+
+  it("maps fallback chains by agent name", () => {
+    const config: HarnessConfig = {
+      fallbacks: {
+        chains: {
+          polat: ["zai/glm-5.1", "openai/gpt-5.4"],
+          halit: ["opencode-go/kimi-k2.5"],
+        },
+      },
+    };
+
+    const state = resolveFallbackState(config);
+
+    expect(state.coordinator.configuredFallbacks).toEqual([
+      { model: "zai/glm-5.1" },
+      { model: "openai/gpt-5.4" },
+    ]);
+    expect(state.verifier.configuredFallbacks).toEqual([
+      { model: "opencode-go/kimi-k2.5" },
+    ]);
+  });
 });

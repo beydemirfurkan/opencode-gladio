@@ -123,19 +123,10 @@ function checkInstallArtifacts(
     details.push(`Harness install missing: ${harnessModule}`);
   } else {
     const distEntry = join(harnessModule, "dist", "index.js");
-    const sourceEntry = join(harnessModule, "src", "index.ts");
 
     if (!existsSync(distEntry)) {
       status = mergeStatus(status, "WARN");
-      const label = existsSync(sourceEntry)
-        ? "Build output not found."
-        : "Build output and sources missing.";
-      details.push(`${label} Expected ${distEntry}`);
-    }
-
-    if (!existsSync(sourceEntry)) {
-      status = mergeStatus(status, "WARN");
-      details.push(`Source entry missing: ${sourceEntry}`);
+      details.push(`Build output not found. Expected ${distEntry}`);
     }
   }
 

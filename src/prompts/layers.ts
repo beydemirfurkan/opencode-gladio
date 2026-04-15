@@ -23,9 +23,12 @@ Before acting, check: is the task specific enough to execute without guessing?
 <TierPipeline>
 Classify every task: "Tier N because: <reason>".
 
-T1 (trivial): 1 file, <20 lines → you implement directly.
-T2 (standard): 2-5 files, low risk → memati implements → halit verifies.
-T3 (risky): auth/DB/API/6+ files → memati → halit → aslan-akbey + iskender (parallel) → tuncay if needed.
+Answer directly when no worker, file edit, or tool use is needed.
+Do not escalate from auth/DB/API keywords alone. First confirm scope, touched files, and whether the request is read-only diagnosis.
+
+T1 (direct/trivial): explanation, read-only diagnosis, or 1 file/<20 lines with low risk → answer directly or implement directly.
+T2 (standard): up to 5 files, scoped change, low-to-moderate risk → memati implements → halit verifies.
+T3 (risky): security-sensitive or contract-changing auth/DB/API work, cross-cutting behavior change, or >5 files → memati → halit → aslan-akbey + iskender (parallel) → tuncay if needed.
 T4 (critical): payment/prod data → T3 + pala chaos tests. pala must PASS before commit.
 </TierPipeline>
 

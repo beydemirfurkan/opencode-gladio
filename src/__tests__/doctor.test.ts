@@ -41,14 +41,11 @@ function prepareDoctorEnvironment(
 
   const harnessDir = join(configDir, "node_modules", "opencode-gladio");
   const distDir = join(harnessDir, "dist");
-  const srcDir = join(harnessDir, "src");
   mkdirSync(distDir, { recursive: true });
-  mkdirSync(srcDir, { recursive: true });
 
   if (!overrides?.omitDist) {
     writeFileSync(join(distDir, "index.js"), "", "utf8");
   }
-  writeFileSync(join(srcDir, "index.ts"), "", "utf8");
 
   const projectDir = join(root, "project");
   const projectConfigDir = join(projectDir, ".opencode");
@@ -127,6 +124,20 @@ describe("Doctor command helpers", () => {
       const managedCheck = report.checks.find((check) => check.name === "Managed plugins");
       expect(managedCheck?.status).toBe("FAIL");
       expect(managedCheck?.details[0]).toContain("Missing managed entries");
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("treats dist-only published installs as healthy", () => {
+    const { options, cleanup } = prepareDoctorEnvironment();
+    try {
+      const report = runDoctor(options);
+      const installCheck = report.checks.find((check) => check.name === "Install artifacts");
+      expect(installCheck?.status).toBe("PASS");
+      expect(installCheck?.details).toEqual([
+        "Config directory and harness artifacts present.",
+      ]);
     } finally {
       cleanup();
     }

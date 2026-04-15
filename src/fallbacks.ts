@@ -41,6 +41,14 @@ function normalizeCandidate(candidate: FallbackCandidate): FallbackCandidate {
   };
 }
 
+function normalizeFallbackEntry(entry: string | FallbackCandidate): FallbackCandidate {
+  if (typeof entry === "string") {
+    return { model: entry };
+  }
+
+  return normalizeCandidate(entry);
+}
+
 function describeCandidate(candidate: FallbackCandidate): string {
   const model = candidate.model ?? "<default model>";
   const variant = candidate.variant ?? "none";
@@ -70,10 +78,13 @@ function buildConfiguredFallbacks(
   role: FallbackRole,
   config: HarnessConfig,
 ): FallbackCandidate[] {
-  const configured = config.fallbacks?.[role];
+  const agentName = role === "coordinator" ? "polat" : "halit";
+  const configured = config.fallbacks?.[role] ?? config.fallbacks?.chains?.[agentName];
+
   if (Array.isArray(configured)) {
-    return configured.map((entry) => normalizeCandidate(entry));
+    return configured.map((entry) => normalizeFallbackEntry(entry));
   }
+
   return DEFAULT_FALLBACK_CONFIG[role].map((entry) => normalizeCandidate(entry));
 }
 
